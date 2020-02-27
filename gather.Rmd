@@ -1,0 +1,33 @@
+---
+title: "Gathering Data"
+author: "Westley Cook"
+date: "2/27/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+```
+
+MLB data downloaded as zip file from http://www.seanlahman.com/baseball-archive/statistics/
+
+```{r mlb, include=FALSE}
+
+mlb_salaries <- read_csv("raw-data/Salaries.csv")
+mlb_teams <- read_csv("raw-data/Teams.csv")
+
+```
+
+
+
+NBA data downloaded as zip file from https://data.world/datadavis/nba-salaries
+
+```{r nba, include=FALSE}
+
+nba_players <- read_csv("raw-data/players.csv")
+nba_salaries <- read_csv("raw-data/salaries_1985to2018.csv")
+
+```
+

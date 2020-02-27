@@ -1,0 +1,14 @@
+---
+title: "About Page"
+author: "Westley Cook"
+date: "2/27/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+[Describe your final project here]
+
+Link to my repo: https://github.com/westleycook/gov-1005-final-project
