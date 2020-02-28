@@ -15,6 +15,16 @@ My project will examine data from the MLB and the NBA, analyzing the relationshi
 
 ### Data I have so far and what I've done with it
 
+#### MLB
+
+I have two .csv files with data from the MLB. Both were downloaded from http://www.seanlahman.com/baseball-archive/statistics/
+
+One file (salaries.csv) contains salary information for every MLB team for every year from 1985-2016. The salaries are listed for each player on the team, but I can produce team payroll for each year by grouping by team and year and taking the sum of player salaries.
+
+The other file (teams.csv) has data from 1871-2018 for each team, which includes their Rank (which I think means in final regular-season standings? Need to check), whether they won their division, whether they won the wc (unclear what that stands for, need to look into it), whether they won their league, and whether they won the world series.
+
+#### NBA
+
 About the data I've collected:
 - what variables I have, what they are and why I chose them, what I'm hoping to do with them
 
