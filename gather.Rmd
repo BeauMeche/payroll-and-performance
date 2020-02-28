@@ -9,6 +9,8 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 
 library(tidyverse)
+library(janitor)
+
 ```
 
 MLB data downloaded as zip file from http://www.seanlahman.com/baseball-archive/statistics/
@@ -18,6 +20,12 @@ MLB data downloaded as zip file from http://www.seanlahman.com/baseball-archive/
 mlb_salaries <- read_csv("raw-data/Salaries.csv")
 mlb_teams <- read_csv("raw-data/Teams.csv")
 
+glimpse(mlb_salaries)
+glimpse(mlb_teams)
+
+mlb_teams %>% 
+  arrange(desc(WSWin))
+
 ```
 
 
@@ -26,8 +34,29 @@ NBA data downloaded as zip file from https://data.world/datadavis/nba-salaries
 
 ```{r nba, include=FALSE}
 
-nba_players <- read_csv("raw-data/players.csv")
-nba_salaries <- read_csv("raw-data/salaries_1985to2018.csv")
+nba_players <- read_csv("raw-data/players.csv") %>% 
+  clean_names()
+
+nba_salaries <- read_csv("raw-data/salaries_1985to2018.csv") %>% 
+  clean_names()
+
+glimpse(nba_players) # looks not very useful for my purposes...
+
+glimpse(nba_salaries) # could scrape data to add a few more seasons to this; it only goes up to 2017-18
+
+team_salaries_by_season <- nba_salaries %>% 
+  group_by(team, season) %>% 
+  summarize(team_salary = sum(salary))
+
+team_salaries_by_season %>% 
+  arrange(desc(season))
+
+# Still need to find data on wins, and data on playoff appearances/wins in each
+# round/finals appearances/finals wins would also be nice
+
+
 
 ```
 
+Could scrape NHL data from here if so inclined:
+https://en.wikipedia.org/wiki/List_of_team_payrolls_in_the_NHL

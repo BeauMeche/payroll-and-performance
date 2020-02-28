@@ -12,3 +12,10 @@ knitr::opts_chunk$set(echo = TRUE)
 [Describe your final project here]
 
 Link to my repo: https://github.com/westleycook/gov-1005-final-project
+
+
+About the data I've collected:
+- what variables I have, what they are and why I chose them, what I'm hoping to do with them
+
+Plans about what the next steps are to keep gathering data:
+- when I'll know I'm done and what I'll do with what I have (what variables I want to compare, etc.)
