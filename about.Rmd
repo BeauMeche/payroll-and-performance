@@ -11,27 +11,33 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ### About this project
 
-My project will examine data from the MLB and the NBA, analyzing the relationship between a team's payroll and their level of success in the league. Payroll is the total amount, in a given year, that a team is spending on its players' salaries. "Success" will be examined in a few different ways: by total wins in the regular season, and by metrics of post-season success (such as making the playoffs, advancing in the playoffs, or winning a championship). If time permits, later on I might try to add analysis of NFL or NHL or MLS data - but for now, I'll stick with the MLB and NBA because their payroll data was publicly available and easy to access.
+My project will examine data from the MLB and the NBA, analyzing the relationship between a team's payroll and their level of success in the league. Payroll is the total amount, in a given year, that a team is spending on its players' salaries. "Success" will be examined in a few different ways: by total wins in the regular season, and by metrics of post-season success (such as making the playoffs, advancing in the playoffs, or winning a championship). My personal hypothesis is that payroll correlates more closely with playoff appearances and regular season standings than it does with championships, indicating that teams can buy a certain level of success by paying a lot to talented players, but that it won't necessarily win them a championship. It will be interesting to see what patterns arise.
 
-### Data I have so far and what I've done with it
+I'd also like to look into cases where teams changed ownership/management or location, and see if it had an impact on payroll - and if it did, see whether the change to payroll had an effect on their success. We'll see if time permits a close examination of this, but at the very least I'd like to examine spikes or declines in payroll spending for teams.
 
-#### MLB
+If time permits, later on I might try to add analysis of NFL or NHL or MLS data - but for now, I'll stick with the MLB and NBA because their payroll data was publicly available and easy to access.
+
+### About my data
+
+#### __MLB__
 
 I have two .csv files with data from the MLB. Both were downloaded from http://www.seanlahman.com/baseball-archive/statistics/
 
 One file (salaries.csv) contains salary information for every MLB team for every year from 1985-2016. The salaries are listed for each player on the team, but I can produce team payroll for each year by grouping by team and year and taking the sum of player salaries.
 
-The other file (teams.csv) has data from 1871-2018 for each team, which includes their Rank (which I think means in final regular-season standings? Need to check), whether they won their division, whether they won the wc (unclear what that stands for, need to look into it), whether they won their league, and whether they won the world series.
+The other file (teams.csv) has data from 1871-2018 for each team, which includes their "rank" (which I think means in final regular-season standings? Need to check), whether they won their division, whether they won the wc (unclear what that stands for, need to look into it), whether they won their league, and whether they won the world series. It also includes potentially interesting variables like attendance, which I probably won't get into.
 
-#### NBA
+There are three main steps I need to take in order to finish gathering and processing my data. One is to join the teams dataframe with the salaries dataframe to produce a new dataframe containing the variables I need for my analysis (team payroll for each year and the various metrics of team success for each year). The second is to find or scrape a dataset with final regular season standings for each season from 1985-2016 so I can use that data (especially how many wins a team had) as another metric for success to compare with payroll. The third is to wrangle the data in order to join together data from teams that changed location (e.g. the Anaheim Angels and the Los Angeles Angels), which are treated as two different teams in this dataset.
 
-About the data I've collected:
-- what variables I have, what they are and why I chose them, what I'm hoping to do with them
+#### __NBA__
 
-### Plans for gathering and processing more data
+I have two additional .csv files with data from the NBA. Both were downloaded from https://data.world/datadavis/nba-salaries
 
-Plans about what the next steps are to keep gathering data:
-- when I'll know I'm done and what I'll do with what I have (what variables I want to compare, etc.)
+The first file in the data I downloaded (players.csv) may not be hugely useful for my purposes: it has data on each player in the NBA (with 24 variables ranging from birth date and place to career FG percent, college, position, and draft year).
+
+The second file, though, (salaries_1985to2018.csv) is similar to the MLB salaries file in that it has variables for player, salary, season, and team - so by grouping by team and season (as I did with the MLB salaries dataset) I summed the player salaries to create a new variable that shows team salary by season.
+
+In terms of gathering/processing data, I have a bit more work to do with the NBA data than I do with the MLB data. For starters, I don't currently have any data I can use to measure a season's success (e.g. regular season standings, making the playoffs, advancing in the playoffs, winning a championship) so I still need to find or scrape that data. Once I find that data, the steps I'll need to take will be similar to those I'll take for the MLB: I'll need to join the success-measuring data with the payroll data, and within the dataframe I'll need to combine the data from teams who changed location (e.g. Seattle SuperSonics to Oklahoma City Thunder) or name (e.g. Charlotte Hornets to Charlotte Bobcats and back to charlotte Hornets).
 
 ### Link to my github repo: 
 https://github.com/westleycook/gov-1005-final-project
