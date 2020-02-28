@@ -17,14 +17,18 @@ MLB data downloaded as zip file from http://www.seanlahman.com/baseball-archive/
 
 ```{r mlb, include=FALSE}
 
-mlb_salaries <- read_csv("raw-data/mlb/salaries.csv")
-mlb_teams <- read_csv("raw-data/mlb/teams.csv")
+mlb_salaries <- read_csv("raw-data/mlb/salaries.csv") %>% 
+  clean_names()
+
+# NEED TO FIX NAMES FOR 'ghome' 'team_i_dlahman45' AND 'team_i_dretro'
+mlb_teams <- read_csv("raw-data/mlb/teams.csv") %>% 
+  clean_names()
 
 glimpse(mlb_salaries)
 glimpse(mlb_teams)
 
 mlb_teams %>% 
-  arrange(desc(WSWin))
+  arrange(desc(ws_win))
 
 # Exploring Data initially:
 
@@ -36,16 +40,15 @@ mlb_teams %>%
 summary(mlb_salaries)
 
 by_team_and_year <- mlb_salaries %>% 
-  group_by(teamID, yearID) %>% 
+  group_by(team_id, year_id) %>% 
   summarize(payroll = sum(salary,
-                          na.rm = TRUE)) %>% 
-  arrange(yearID)
- 
+                          na.rm = TRUE))
+
 by_team_and_year %>%   
-   ggplot(aes(yearID,
+   ggplot(aes(year_id,
              payroll)) +
   geom_line() +
-  facet_wrap(~ teamID)
+  facet_wrap(~ team_id)
 
 # Will want to adjust all dollar values for inflation
 
