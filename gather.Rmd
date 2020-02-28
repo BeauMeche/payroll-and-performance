@@ -17,8 +17,8 @@ MLB data downloaded as zip file from http://www.seanlahman.com/baseball-archive/
 
 ```{r mlb, include=FALSE}
 
-mlb_salaries <- read_csv("raw-data/Salaries.csv")
-mlb_teams <- read_csv("raw-data/Teams.csv")
+mlb_salaries <- read_csv("raw-data/mlb/salaries.csv")
+mlb_teams <- read_csv("raw-data/mlb/teams.csv")
 
 glimpse(mlb_salaries)
 glimpse(mlb_teams)
@@ -26,30 +26,77 @@ glimpse(mlb_teams)
 mlb_teams %>% 
   arrange(desc(WSWin))
 
+# Exploring Data initially:
+
+# Data is from here: http://www.seanlahman.com/baseball-archive/statistics/
+
+# Somebody who did something similar to me:
+# https://courses.cs.washington.edu/courses/cse140/13wi/projects/mirae-report.pdf
+
+summary(mlb_salaries)
+
+by_team_and_year <- mlb_salaries %>% 
+  group_by(teamID, yearID) %>% 
+  summarize(payroll = sum(salary,
+                          na.rm = TRUE)) %>% 
+  arrange(yearID)
+ 
+by_team_and_year %>%   
+   ggplot(aes(yearID,
+             payroll)) +
+  geom_line() +
+  facet_wrap(~ teamID)
+
+# Will want to adjust all dollar values for inflation
+
+# Could look into big/sudden changes in team spending (e.g. LAN in ~2010) to see
+# if the money had an impact
+
+# Will want to see if I can find data on total wins for the applicable time
+# window, not just on division or league or WS wins
+
+# Money spent is independent variable and wins/success is dependent variable;
+# trying to find out if money itself drives success, or if they tend to
+# fluctuate together (e.g. because teams that do well sell more tickets and get
+# more revenue and can then spend more to keep doing well)
+
+# Can scrape https://hoopshype.com/salaries/ for NBA data from 90/91 - 2019/20
+
+# Or, alternatively, can try downloading dataframes from 
+# https://data.world/datadavis/nba-salaries
+
+# Could also try scraping NHL data from \
+# https://en.wikipedia.org/wiki/List_of_team_payrolls_in_the_NHL
+# (small sample size though)
+
+
 ```
-
-
 
 NBA data downloaded as zip file from https://data.world/datadavis/nba-salaries
 
 ```{r nba, include=FALSE}
 
-nba_players <- read_csv("raw-data/players.csv") %>% 
+nba_players <- read_csv("raw-data/nba/players.csv") %>% 
   clean_names()
 
-nba_salaries <- read_csv("raw-data/salaries_1985to2018.csv") %>% 
+nba_salaries <- read_csv("raw-data/nba/salaries_1985to2018.csv") %>% 
   clean_names()
 
 glimpse(nba_players) # looks not very useful for my purposes...
 
-glimpse(nba_salaries) # could scrape data to add a few more seasons to this; it only goes up to 2017-18
+glimpse(nba_salaries) # goes from 1984-85 to 2017-18
 
 team_salaries_by_season <- nba_salaries %>% 
   group_by(team, season) %>% 
   summarize(team_salary = sum(salary))
 
 team_salaries_by_season %>% 
-  arrange(desc(season))
+  arrange(season)
+
+team_salaries_by_season %>% 
+  ggplot(aes(as.factor(season), team_salary)) +
+  facet_wrap(~team) +
+  geom_point()
 
 # Still need to find data on wins, and data on playoff appearances/wins in each
 # round/finals appearances/finals wins would also be nice
