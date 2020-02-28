@@ -1,7 +1,7 @@
 ---
-title: "About Page"
+title: "About Page Draft"
 author: "Westley Cook"
-date: "2/27/2020"
+date: "2/28/2020"
 output: html_document
 ---
 
@@ -9,13 +9,19 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-[Describe your final project here]
+### About this project
 
-Link to my repo: https://github.com/westleycook/gov-1005-final-project
+My project will examine data from the MLB and the NBA, analyzing the relationship between a team's payroll and their level of success in the league. Payroll is the total amount, in a given year, that a team is spending on its players' salaries. "Success" will be examined in a few different ways: by total wins in the regular season, and by metrics of post-season success (such as making the playoffs, advancing in the playoffs, or winning a championship). If time permits, later on I might try to add analysis of NFL or NHL or MLS data - but for now, I'll stick with the MLB and NBA because their payroll data was publicly available and easy to access.
 
+### Data I have so far and what I've done with it
 
 About the data I've collected:
 - what variables I have, what they are and why I chose them, what I'm hoping to do with them
 
+### Plans for gathering and processing more data
+
 Plans about what the next steps are to keep gathering data:
 - when I'll know I'm done and what I'll do with what I have (what variables I want to compare, etc.)
+
+### Link to my github repo: 
+https://github.com/westleycook/gov-1005-final-project
