@@ -102,14 +102,10 @@ team_salaries_by_season %>%
   facet_wrap(~team) +
   geom_point()
 
-# Still need to find data on wins, and data on playoff appearances/wins in each
-# round/finals appearances/finals wins would also be nice
+# Found data on wins and postseason success!
 
-hawks_html <- read_html("https://www.landofbasketball.com/teams/records_atlanta_hawks.htm")
-
-# Grabbing the "table" nodes to see 
-
-tbl <- hawks_html %>% 
+hawks <- read_html(
+    "https://www.landofbasketball.com/teams/records_atlanta_hawks.htm") %>% 
   html_nodes("table") %>% 
   .[2] %>% 
   html_table() %>% 
@@ -117,28 +113,185 @@ tbl <- hawks_html %>%
   slice(2, 5:38) %>% 
   row_to_names(1) %>% 
   clean_names() %>% 
-  rename(conference = standing_2)
-  
+  rename(conference = standing_2) %>% 
+  rename(rs_win_pct = percent) %>% 
+  rename(playoff_win_pct = percent_2) %>% 
+  separate(w_l, into = c("wins", "losses"), sep = "-") %>% 
+  separate(w_l_2, into = c("playoff_wins", "playoff_losses"), sep = "-") %>% 
+  mutate(lockout = ifelse(season %>% endsWith(" *"), TRUE, FALSE)) %>% 
+  mutate(season = ifelse(season %>% endsWith(" *"), 
+                         season %>% substr(start = 1, stop = 7),
+                         season)) %>% 
 
-hawks_html %>%   
-  html_nodes(css = ".a-left div , .color-5+ .color-5 td , .bl div , .top td") %>% 
-  
+# pattern from here: http://stla.github.io/stlapblog/posts/Numextract.html  
+    
+  mutate(standing = standing %>% str_extract("\\-*\\d+\\.*\\d*")) %>% 
+  rename(conf_standing = standing) %>% 
+  mutate(wins = as.numeric(wins),
+         losses = as.numeric(losses),
+         rs_win_pct = as.numeric(rs_win_pct),
+         conf_standing = as.numeric(conf_standing),
+         playoff_wins = as.numeric(playoff_wins),
+         playoff_losses = as.numeric(playoff_losses),
+         playoff_win_pct = as.numeric(playoff_win_pct))
 
-  mutate(lockout = ifelse("*" %in% X1,
-                          TRUE,
-                          FALSE))
+team_season_data <- function(team_url){
+  read_html(team_url) %>% 
+  html_nodes("table") %>% 
+  .[2] %>% 
+  html_table() %>% 
+  as.data.frame() %>% 
+  slice(2, 5:38) %>% 
+  row_to_names(1) %>% 
+  clean_names() %>% 
+  rename(conference = standing_2) %>% 
+  rename(rs_win_pct = percent) %>% 
+  rename(playoff_win_pct = percent_2) %>% 
+  separate(w_l, into = c("wins", "losses"), sep = "-") %>% 
+  separate(w_l_2, into = c("playoff_wins", "playoff_losses"), sep = "-") %>% 
+  mutate(lockout = ifelse(season %>% endsWith(" *"), TRUE, FALSE)) %>% 
+  mutate(season = ifelse(season %>% endsWith(" *"), 
+                         season %>% substr(start = 1, stop = 7),
+                         season)) %>% 
+  mutate(standing = standing %>% str_extract("\\-*\\d+\\.*\\d*")) %>% 
+  rename(conf_standing = standing) %>% 
+  mutate(wins = as.numeric(wins),
+         losses = as.numeric(losses),
+         rs_win_pct = as.numeric(rs_win_pct),
+         conf_standing = as.numeric(conf_standing),
+         playoff_wins = as.numeric(playoff_wins),
+         playoff_losses = as.numeric(playoff_losses),
+         playoff_win_pct = as.numeric(playoff_win_pct))
+}
 
-?row_to_names
-# Importing the table itself as a table into R
-  
-  html_table()
+celtics <- team_season_data(
+  "https://www.landofbasketball.com/teams/records_boston_celtics.htm")
 
-?html_name
+nets <- team_season_data(
+  "https://www.landofbasketball.com/teams/records_brooklyn_nets.htm"
+)
 
-# Turning the table into a dataframe
+# hornets only have 28 rows; started in 1988-89, missiong 2002-03 and 2003-04
 
-olympic_df <- olympic_table %>% 
-  as.data.frame()
+hornets <- team_season_data(
+  "https://www.landofbasketball.com/teams/records_charlotte_hornets.htm"
+)
+
+bulls <- team_season_data(
+  "https://www.landofbasketball.com/teams/records_chicago_bulls.htm"
+)
+
+cavs <- team_season_data(
+  "https://www.landofbasketball.com/teams/records_cleveland_cavaliers.htm"
+)
+
+mavs <- team_season_data(
+  "https://www.landofbasketball.com/teams/records_dallas_mavericks.htm"
+)
+
+nuggets <- team_season_data(
+  "https://www.landofbasketball.com/teams/records_denver_nuggets.htm"
+)
+
+pistons <- team_season_data(
+  "https://www.landofbasketball.com/teams/records_detroit_pistons.htm"
+)
+
+warriors <- team_season_data(
+  "https://www.landofbasketball.com/teams/records_golden_state_warriors.htm"
+)
+
+rockets <- team_season_data(
+  "https://www.landofbasketball.com/teams/records_houston_rockets.htm"
+)
+
+pacers <- team_season_data(
+  "https://www.landofbasketball.com/teams/records_indiana_pacers.htm"
+)
+
+clippers <- team_season_data(
+  "https://www.landofbasketball.com/teams/records_los_angeles_clippers.htm"
+)
+
+lakers <- team_season_data(
+  "https://www.landofbasketball.com/teams/records_los_angeles_lakers.htm"
+)
+
+# grizzlies only have 23 rows; started in 1995-96
+
+grizzlies <- team_season_data(
+  "https://www.landofbasketball.com/teams/records_memphis_grizzlies.htm"
+)
+
+# heat only have 30 rows; started in 1988-89
+
+heat <- team_season_data(
+  "https://www.landofbasketball.com/teams/records_miami_heat.htm"
+)
+
+bucks <- team_season_data(
+  "https://www.landofbasketball.com/teams/records_milwaukee_bucks.htm"
+)
+
+# twolves only have 29 rows; started in 1989-90
+
+twolves <- team_season_data(
+  "https://www.landofbasketball.com/teams/records_minnesota_timberwolves.htm"
+)
+
+# pelicans only have 16 rows; started in 2002-03
+
+pelicans <- team_season_data(
+  "https://www.landofbasketball.com/teams/records_new_orleans_pelicans.htm"
+)
+
+knicks <- team_season_data(
+  "https://www.landofbasketball.com/teams/records_new_york_knicks.htm"
+)
+
+thunder <- team_season_data(
+  "https://www.landofbasketball.com/teams/records_oklahoma_city_thunder.htm"
+)
+
+# magic only have 29 rows; started in 1989-90
+
+magic <- team_season_data(
+  "https://www.landofbasketball.com/teams/records_orlando_magic.htm"
+)
+
+p76ers <- team_season_data(
+  "https://www.landofbasketball.com/teams/records_philadelphia_76ers.htm"
+)
+
+suns <- team_season_data(
+  "https://www.landofbasketball.com/teams/records_phoenix_suns.htm"
+)
+
+blazers <- team_season_data(
+  "https://www.landofbasketball.com/teams/records_portland_trailblazers.htm"
+)
+
+kings <- team_season_data(
+  "https://www.landofbasketball.com/teams/records_sacramento_kings.htm"
+)
+
+spurs <- team_season_data(
+  "https://www.landofbasketball.com/teams/records_san_antonio_spurs.htm"
+)
+
+# raptors only have 23 rows; started in 1995-96
+
+raptors <- team_season_data(
+  "https://www.landofbasketball.com/teams/records_toronto_raptors.htm"
+)
+
+jazz <- team_season_data(
+  "https://www.landofbasketball.com/teams/records_utah_jazz.htm"
+)
+
+wizards <- team_season_data(
+  "https://www.landofbasketball.com/teams/records_washington_wizards.htm"
+)
 
 ```
 
