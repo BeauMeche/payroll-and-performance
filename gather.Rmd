@@ -10,6 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 library(tidyverse)
 library(janitor)
+library(rvest)
 
 ```
 
@@ -104,7 +105,40 @@ team_salaries_by_season %>%
 # Still need to find data on wins, and data on playoff appearances/wins in each
 # round/finals appearances/finals wins would also be nice
 
+hawks_html <- read_html("https://www.landofbasketball.com/teams/records_atlanta_hawks.htm")
 
+# Grabbing the "table" nodes to see 
+
+tbl <- hawks_html %>% 
+  html_nodes("table") %>% 
+  .[2] %>% 
+  html_table() %>% 
+  as.data.frame() %>% 
+  slice(2, 5:38) %>% 
+  row_to_names(1) %>% 
+  clean_names() %>% 
+  rename(conference = standing_2)
+  
+
+hawks_html %>%   
+  html_nodes(css = ".a-left div , .color-5+ .color-5 td , .bl div , .top td") %>% 
+  
+
+  mutate(lockout = ifelse("*" %in% X1,
+                          TRUE,
+                          FALSE))
+
+?row_to_names
+# Importing the table itself as a table into R
+  
+  html_table()
+
+?html_name
+
+# Turning the table into a dataframe
+
+olympic_df <- olympic_table %>% 
+  as.data.frame()
 
 ```
 
