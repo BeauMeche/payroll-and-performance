@@ -104,7 +104,7 @@ mlb_full <- mlb_rs_wins %>%
 
 mlb_full %>% 
   ggplot(aes(payroll / 1000000, 
-             round(rs_win_pct * 100, digits = 0))) +
+             round(rs_win_pct, digits = 2))) +
   geom_point() +
   facet_wrap(~year) +
   labs(title = "MLB Team Payroll and Regular Season Win Percentage",
@@ -224,7 +224,7 @@ nets <- team_season_data(
   "Nets"
 )
 
-# hornets only have 28 rows; started in 1988-89, missiong 2002-03 and 2003-04
+# hornets only have 28 rows; started in 1988-89, missing 2002-03 and 2003-04
 
 hornets <- team_season_data(
   "https://www.landofbasketball.com/teams/records_charlotte_hornets.htm",
@@ -446,9 +446,9 @@ nba_full <- nba_team_performance %>%
                                    "NBA Champions")) %>% 
   mutate(franchise_id = as.factor(franchise_id))
 
-ggplot(subset(nba_full, !is.na(team_salary)), 
+ggplot(nba_full, 
        aes(season, team_salary / 1000000, color = performance)) +
-  geom_point(alpha = .7) +
+  geom_point(alpha = .7, na.rm = TRUE) +
   scale_color_manual(breaks = c("Did not qualify",
                                 "Lost 1st Round",
                                 "Lost Conf Semis",
@@ -469,6 +469,21 @@ ggplot(subset(nba_full, !is.na(team_salary)),
        color = "Playoff Result") +
   xlab("Season") +
   ylab("Team Payroll (millions)")
+
+nba_full %>% 
+  ggplot(aes(team_salary / 1000000, rs_win_pct)) +
+  geom_point(na.rm = TRUE) +
+  facet_wrap(~ season) +
+  theme_classic() +
+  labs(title = "NBA Team Payroll and Regular Season Win Percentage",
+       subtitle = "Observe changes over time",
+       x = "Payroll (millions)",
+       y = "Regular Season Win Percentage")
+
+# can add performance to this plot really easily by adding it as the color,
+# copying the specs from the plot above
+
+ggsave("nba_payroll_winpct_plot.png")
 
 ```
 
