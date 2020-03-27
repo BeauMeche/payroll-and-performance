@@ -323,7 +323,8 @@ nba_full <- nba_team_performance %>%
 
 ```{r nba-plot, echo=FALSE}
 
-ggplot(subset(nba_full, !is.na(team_salary)), aes(season, team_salary / 1000000, color = performance)) +
+ggplot(subset(nba_full, !is.na(team_salary)), 
+       aes(season, team_salary / 1000000, color = performance)) +
   geom_point(alpha = .7) +
   scale_color_manual(breaks = c("Did not qualify",
                                 "Lost 1st Round",
