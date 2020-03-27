@@ -1,0 +1,19 @@
+---
+title: "Milestone 6"
+author: "Westley Cook"
+date: "3/26/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Panes for final project
+
+- how salaries have changed over time
+- how salaries affect performance (playoffs, wins, championships, etc.)
+
+What are all the questions my data could answer?
+- after making a list and thinking them through, see what's interesting and what you actually want to learn; then work on those
+- 
