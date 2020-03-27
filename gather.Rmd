@@ -27,9 +27,6 @@ mlb_salaries_raw <- read_csv("raw-data/mlb/salaries.csv") %>%
 mlb_teams <- read_csv("raw-data/mlb/teams.csv") %>% 
   clean_names()
 
-mlb_teams %>% 
-  arrange(desc(ws_win))
-
 # Exploring Data initially:
 
 # Data is from here: http://www.seanlahman.com/baseball-archive/statistics/
@@ -42,11 +39,18 @@ mlb_salaries <- mlb_salaries_raw %>%
   summarize(payroll = sum(salary,
                           na.rm = TRUE))
 
-mlb_salaries %>%   
-   ggplot(aes(year_id,
-             payroll)) +
-  geom_line() +
-  facet_wrap(~ team_id)
+mlb_salaries %>% 
+  ggplot(aes(year_id, payroll)) +
+  geom_point() +
+  facet_wrap(~team_id)
+
+
+
+mlb_teams_salaries <- mlb_salaries %>% 
+  right_join(mlb_teams, by = c("year_id", "team_id")) %>% 
+  filter(year_id > 1984)
+
+
 
 # Will want to adjust all dollar values for inflation
 
@@ -55,6 +59,62 @@ mlb_salaries %>%
 
 # Will want to see if I can find data on total wins for the applicable time
 # window, not just on division or league or WS wins
+
+mlb_rs_wins <- read_html("https://www.baseball-reference.com/leagues/MLB/") %>% 
+  html_nodes("table") %>% 
+  html_table() %>% 
+  as.data.frame() %>% 
+  na_if("") %>% 
+  filter(G != "G")
+
+mlb_rs_wins %<>% 
+  pivot_longer(cols = ARI:WSN,
+               names_to = "franch_id", 
+               values_to = "rs_wins",
+               values_drop_na = TRUE) %>% 
+  rename(games_played = G,
+         year = Year) %>% 
+  mutate(year = as.numeric(year),
+         games_played = as.numeric(games_played),
+         rs_wins = as.numeric(rs_wins),
+         franch_id = gsub("LAA", "ANA", franch_id),
+         franch_id = gsub("MIA", "FLA", franch_id),
+         franch_id = gsub("TBR", "TBD", franch_id))
+
+
+# team IDs to change to make this work:
+# LAA (should be ANA), MIA (should be FLA), TBR (should be TBD)
+
+mlb_full <- mlb_rs_wins %>% 
+  left_join(mlb_teams_salaries, by = c("franch_id", 
+                                       "year" = "year_id")) %>% 
+  filter(year <= 2016,
+         year >= 1985) %>% 
+  mutate(rs_win_pct = rs_wins / games_played) %>% 
+  select(year, franch_id, team_id, name, payroll,
+         games_played, rs_wins, rs_win_pct,
+         lg_id, rank, lg_win, ws_win)
+
+# in the above, rank appears to mean within the division; I could add my own
+# variable to show whether a team made the playoffs, but it would have to
+# somehow add the wild card teams - could figure out how to group by year and
+# league and take the top four teams, but that might leave out division
+# champs... This is a complicated manipulation :/ Might be easier just to take
+# division champs
+
+mlb_full %>% 
+  ggplot(aes(payroll / 1000000, 
+             round(rs_win_pct * 100, digits = 0))) +
+  geom_point() +
+  facet_wrap(~year) +
+  labs(title = "MLB Team Payroll and Regular Season Win Percentage",
+       subtitle = "See a positive correlation emerging over time",
+       x = "Payroll (millions)",
+       y = "Regular Season Win Percentage") +
+  theme_classic() +
+  scale_x_continuous(breaks = c(0, 100, 200)) 
+
+ggsave("mlb_payroll_winpct_plot.png")
 
 # Money spent is independent variable and wins/success is dependent variable;
 # trying to find out if money itself drives success, or if they tend to
@@ -69,7 +129,6 @@ mlb_salaries %>%
 # Could also try scraping NHL data from \
 # https://en.wikipedia.org/wiki/List_of_team_payrolls_in_the_NHL
 # (small sample size though)
-
 
 ```
 
@@ -387,7 +446,8 @@ nba_full <- nba_team_performance %>%
                                    "NBA Champions")) %>% 
   mutate(franchise_id = as.factor(franchise_id))
 
-ggplot(subset(nba_full, !is.na(team_salary)), aes(season, team_salary / 1000000, color = performance)) +
+ggplot(subset(nba_full, !is.na(team_salary)), 
+       aes(season, team_salary / 1000000, color = performance)) +
   geom_point(alpha = .7) +
   scale_color_manual(breaks = c("Did not qualify",
                                 "Lost 1st Round",
