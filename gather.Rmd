@@ -13,12 +13,13 @@ library(janitor)
 library(rvest)
 library(stringr)
 library(magrittr)
+library(gridExtra)
 
 ```
 
 MLB data downloaded as zip file from http://www.seanlahman.com/baseball-archive/statistics/
 
-```{r mlb, include=FALSE}
+```{r load-mlb-data, include=FALSE}
 
 mlb_salaries_raw <- read_csv("raw-data/mlb/salaries.csv") %>% 
   clean_names()
@@ -81,6 +82,9 @@ mlb_rs_wins %<>%
          franch_id = gsub("MIA", "FLA", franch_id),
          franch_id = gsub("TBR", "TBD", franch_id))
 
+```
+
+```{r join-mlb-data, echo=FALSE}
 
 # team IDs to change to make this work:
 # LAA (should be ANA), MIA (should be FLA), TBR (should be TBD)
@@ -90,10 +94,13 @@ mlb_full <- mlb_rs_wins %>%
                                        "year" = "year_id")) %>% 
   filter(year <= 2016,
          year >= 1985) %>% 
-  mutate(rs_win_pct = rs_wins / games_played) %>% 
+  mutate(rs_win_pct = rs_wins / games_played,
+         div_win = ifelse(rank == 1,
+                          "Y",
+                          "N")) %>% 
   select(year, franch_id, team_id, name, payroll,
          games_played, rs_wins, rs_win_pct,
-         lg_id, rank, lg_win, ws_win)
+         lg_id, rank, div_win, lg_win, ws_win)
 
 # in the above, rank appears to mean within the division; I could add my own
 # variable to show whether a team made the playoffs, but it would have to
@@ -101,6 +108,10 @@ mlb_full <- mlb_rs_wins %>%
 # league and take the top four teams, but that might leave out division
 # champs... This is a complicated manipulation :/ Might be easier just to take
 # division champs
+
+```
+
+```{r plot-mlb-data, echo=FALSE}
 
 mlb_full %>% 
   ggplot(aes(payroll / 1000000, 
@@ -116,25 +127,11 @@ mlb_full %>%
 
 ggsave("mlb_payroll_winpct_plot.png")
 
-# Money spent is independent variable and wins/success is dependent variable;
-# trying to find out if money itself drives success, or if they tend to
-# fluctuate together (e.g. because teams that do well sell more tickets and get
-# more revenue and can then spend more to keep doing well)
-
-# Can scrape https://hoopshype.com/salaries/ for NBA data from 90/91 - 2019/20
-
-# Or, alternatively, can try downloading dataframes from 
-# https://data.world/datadavis/nba-salaries
-
-# Could also try scraping NHL data from \
-# https://en.wikipedia.org/wiki/List_of_team_payrolls_in_the_NHL
-# (small sample size though)
-
 ```
 
 NBA data downloaded as zip file from https://data.world/datadavis/nba-salaries
 
-```{r nba, include=FALSE}
+```{r load-nba-data, include=FALSE}
 
 nba_players <- read_csv("raw-data/nba/players.csv") %>% 
   clean_names()   # not that useful
@@ -446,6 +443,10 @@ nba_full <- nba_team_performance %>%
                                    "NBA Champions")) %>% 
   mutate(franchise_id = as.factor(franchise_id))
 
+```
+
+```{r plot-nba-data, echo=FALSE}
+
 ggplot(nba_full, 
        aes(season, team_salary / 1000000, color = performance)) +
   geom_point(alpha = .7, na.rm = TRUE) +
@@ -484,6 +485,126 @@ nba_full %>%
 # copying the specs from the plot above
 
 ggsave("nba_payroll_winpct_plot.png")
+
+```
+
+```{r nba-and-mlb-plots-with-colored-performance, echo=FALSE}
+
+mlb_full %>% 
+  ggplot(aes(payroll / 1000000, 
+             round(rs_win_pct, digits = 2),
+             color = div_win)) +
+  geom_point() +
+  facet_wrap(~year) +
+  labs(title = "MLB Team Payroll, Regular Season Wins, and Division Titles",
+       subtitle = "Money may buy wins, but not necessarily a division title",
+       x = "Payroll (in millions)",
+       y = "Regular Season Win Percentage") +
+  theme_classic() +
+  scale_x_continuous(breaks = c(0, 100, 200)) +
+  scale_color_manual(name = "Won Division",
+                     breaks = c("Y", "N"),
+                     labels = c("Yes", "No"),
+                     values = c("black", "red"))
+
+ggsave("mlb_payroll_winpct_performance_plot.png")
+
+nba_full %>% 
+  ggplot(aes(team_salary / 1000000, rs_win_pct, color = performance)) +
+  geom_point(na.rm = TRUE) +
+  facet_wrap(~ season) +
+  theme_classic() +
+  labs(title = "NBA Team Payroll, Regular Season Wins, and Playoff Results",
+       subtitle = "Money seems to have limited effect on team performance",
+       x = "Payroll (in millions)",
+       y = "Regular Season Win Percentage") +
+  scale_color_manual(name = "Playoff Performance",
+                     breaks = c("Did not qualify",
+                                "Lost 1st Round",
+                                "Lost Conf Semis",
+                                "Lost Conf Finals",
+                                "Lost NBA Finals",
+                                "NBA Champions"),
+                     values = c("black",
+                                "purple",
+                                "red",
+                                "red",
+                                "green",
+                                "green"))
+
+ggsave("nba_payroll_winpct_performance_plot.png")
+
+```
+
+Side-by-side comparison:
+
+```{r side-by-side, echo=FALSE}
+
+mlb_1 <- mlb_full %>% 
+  ggplot(aes(payroll / 1000000, 
+             round(rs_win_pct, digits = 2))) +
+  geom_point() +
+  facet_wrap(~year) +
+  labs(title = "MLB Team Payroll and Regular Season Win Percentage",
+       subtitle = "See a positive correlation emerging over time",
+       x = "Payroll (millions)",
+       y = "Regular Season Win Percentage") +
+  theme_classic() +
+  scale_x_continuous(breaks = c(0, 100, 200)) 
+
+nba_1 <- nba_full %>% 
+  ggplot(aes(team_salary / 1000000, rs_win_pct)) +
+  geom_point(na.rm = TRUE) +
+  facet_wrap(~ season) +
+  theme_classic() +
+  labs(title = "NBA Team Payroll and Regular Season Win Percentage",
+       subtitle = "Positive correlation observable in some years",
+       x = "Payroll (millions)",
+       y = "Regular Season Win Percentage")
+
+grid.arrange(mlb_1, nba_1, ncol = 2)
+
+mlb_2 <- mlb_full %>% 
+  ggplot(aes(payroll / 1000000, 
+             round(rs_win_pct, digits = 2),
+             color = div_win)) +
+  geom_point() +
+  facet_wrap(~year) +
+  labs(title = "MLB Team Payroll, Regular Season Wins, and Division Titles",
+       subtitle = "Money may buy wins, but not necessarily a division title",
+       x = "Payroll (in millions)",
+       y = "Regular Season Win Percentage") +
+  theme_classic() +
+  scale_x_continuous(breaks = c(0, 100, 200)) +
+  scale_color_manual(name = "Won Division",
+                     breaks = c("Y", "N"),
+                     labels = c("Yes", "No"),
+                     values = c("black", "red"))
+
+nba_2 <- nba_full %>% 
+  ggplot(aes(team_salary / 1000000, rs_win_pct, color = performance)) +
+  geom_point(na.rm = TRUE) +
+  facet_wrap(~ season) +
+  theme_classic() +
+  labs(title = "NBA Team Payroll, Regular Season Wins, and Playoff Results",
+       subtitle = "Money seems to have limited effect on team performance",
+       x = "Payroll (in millions)",
+       y = "Regular Season Win Percentage") +
+  scale_color_manual(name = "Playoff Performance",
+                     breaks = c("Did not qualify",
+                                "Lost 1st Round",
+                                "Lost Conf Semis",
+                                "Lost Conf Finals",
+                                "Lost NBA Finals",
+                                "NBA Champions"),
+                     values = c("black",
+                                "purple",
+                                "red",
+                                "red",
+                                "green",
+                                "green"))
+
+grid.arrange(mlb_2, nba_2, ncol = 2)
 
 ```
 
