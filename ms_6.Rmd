@@ -17,3 +17,8 @@ Panes for final project
 What are all the questions my data could answer?
 - after making a list and thinking them through, see what's interesting and what you actually want to learn; then work on those
 - 
+
+# Money spent is independent variable and wins/success is dependent variable;
+# trying to find out if money itself drives success, or if they tend to
+# fluctuate together (e.g. because teams that do well sell more tickets and get
+# more revenue and can then spend more to keep doing well)

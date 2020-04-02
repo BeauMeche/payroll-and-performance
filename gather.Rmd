@@ -117,13 +117,14 @@ mlb_full %>%
   ggplot(aes(payroll / 1000000, 
              round(rs_win_pct, digits = 2))) +
   geom_point() +
-  facet_wrap(~year) +
+  facet_wrap(~year, scales = "free_x") +
   labs(title = "MLB Team Payroll and Regular Season Win Percentage",
        subtitle = "See a positive correlation emerging over time",
        x = "Payroll (millions)",
        y = "Regular Season Win Percentage") +
   theme_classic() +
-  scale_x_continuous(breaks = c(0, 100, 200)) 
+  scale_x_continuous(breaks = c(0, 100, 200)) +
+  geom_smooth(method = "lm", se = FALSE)
 
 ggsave("mlb_payroll_winpct_plot.png")
 
@@ -474,28 +475,30 @@ ggplot(nba_full,
 nba_full %>% 
   ggplot(aes(team_salary / 1000000, rs_win_pct)) +
   geom_point(na.rm = TRUE) +
-  facet_wrap(~ season) +
+  facet_wrap(~ season, scales = "free_x") +
   theme_classic() +
   labs(title = "NBA Team Payroll and Regular Season Win Percentage",
        subtitle = "Observe changes over time",
        x = "Payroll (millions)",
-       y = "Regular Season Win Percentage")
+       y = "Regular Season Win Percentage") +
+  geom_smooth(method = "lm", se = FALSE)
 
 # can add performance to this plot really easily by adding it as the color,
 # copying the specs from the plot above
 
-ggsave("nba_payroll_winpct_plot.png")
+ggsave("nba_payroll_winpct_plot_free_x.png")
 
 ```
 
 ```{r nba-and-mlb-plots-with-colored-performance, echo=FALSE}
 
 mlb_full %>% 
+  ungroup() %>% 
   ggplot(aes(payroll / 1000000, 
              round(rs_win_pct, digits = 2),
              color = div_win)) +
   geom_point() +
-  facet_wrap(~year) +
+  facet_wrap(~year, scales = "free_x") +
   labs(title = "MLB Team Payroll, Regular Season Wins, and Division Titles",
        subtitle = "Money may buy wins, but not necessarily a division title",
        x = "Payroll (in millions)",
@@ -505,17 +508,18 @@ mlb_full %>%
   scale_color_manual(name = "Won Division",
                      breaks = c("Y", "N"),
                      labels = c("Yes", "No"),
-                     values = c("black", "red"))
+                     values = c("black", "red")) +
+  geom_smooth(method = "lm", se = FALSE)
 
-ggsave("mlb_payroll_winpct_performance_plot.png")
+ggsave("mlb_payroll_winpct_performance_plot_free_x.png")
 
 nba_full %>% 
   ggplot(aes(team_salary / 1000000, rs_win_pct, color = performance)) +
   geom_point(na.rm = TRUE) +
-  facet_wrap(~ season) +
+  facet_wrap(~ season, scales = "free_x") +
   theme_classic() +
   labs(title = "NBA Team Payroll, Regular Season Wins, and Playoff Results",
-       subtitle = "Money seems to have limited effect on team performance",
+       subtitle = "Money positively associated with team performance",
        x = "Payroll (in millions)",
        y = "Regular Season Win Percentage") +
   scale_color_manual(name = "Playoff Performance",
@@ -526,13 +530,14 @@ nba_full %>%
                                 "Lost NBA Finals",
                                 "NBA Champions"),
                      values = c("black",
-                                "purple",
+                                "dark red",
+                                "pink",
                                 "red",
-                                "red",
-                                "green",
-                                "green"))
+                                "light blue",
+                                "green")) +
+  geom_smooth(method = "lm", se = FALSE)
 
-ggsave("nba_payroll_winpct_performance_plot.png")
+ggsave("nba_payroll_winpct_performance_plot_free_x.png")
 
 ```
 
@@ -569,7 +574,7 @@ mlb_2 <- mlb_full %>%
              round(rs_win_pct, digits = 2),
              color = div_win)) +
   geom_point() +
-  facet_wrap(~year) +
+  facet_wrap(~year, scales = "free_x") +
   labs(title = "MLB Team Payroll, Regular Season Wins, and Division Titles",
        subtitle = "Money may buy wins, but not necessarily a division title",
        x = "Payroll (in millions)",
@@ -584,7 +589,7 @@ mlb_2 <- mlb_full %>%
 nba_2 <- nba_full %>% 
   ggplot(aes(team_salary / 1000000, rs_win_pct, color = performance)) +
   geom_point(na.rm = TRUE) +
-  facet_wrap(~ season) +
+  facet_wrap(~ season, scales = "free_x") +
   theme_classic() +
   labs(title = "NBA Team Payroll, Regular Season Wins, and Playoff Results",
        subtitle = "Money seems to have limited effect on team performance",
@@ -598,16 +603,18 @@ nba_2 <- nba_full %>%
                                 "Lost NBA Finals",
                                 "NBA Champions"),
                      values = c("black",
-                                "purple",
+                                "dark red",
+                                "pink",
                                 "red",
-                                "red",
-                                "green",
+                                "light blue",
                                 "green"))
 
 grid.arrange(mlb_2, nba_2, ncol = 2)
 
-```
+mlb_full %>% 
+  summarize(cor = cor(rs_win_pct, payroll))
 
+```
 
 Could scrape NHL data from here if so inclined:
 https://en.wikipedia.org/wiki/List_of_team_payrolls_in_the_NHL
