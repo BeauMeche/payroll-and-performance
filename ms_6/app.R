@@ -1,19 +1,21 @@
-#
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
-
 library(shiny)
 
+# load mlb data, including plot
+
 source("mlb_data.R")
+
+# load nba data, including plot
+
 source("nba_data.R")
 
 ui <- navbarPage(
+    
+    # title
+    
     "Payroll and Performance: Comparing MLB and the NBA",
+    
+    # plots panel, which will have plots to show data by league
+    
     tabPanel("Plots",
              fluidPage(
                  titlePanel("Comparing Leagues"),
@@ -26,11 +28,17 @@ ui <- navbarPage(
                          )),
                      mainPanel(plotOutput("league_plot")))
              )),
+    
+    # discussion panel, to talk more about the content?
+    
     tabPanel("Discussion",
              titlePanel("Discussion Title"),
              p("Tour of the modeling choices you made and 
               an explanation of why you made them"),
              p("[Content forthcoming]")),
+    
+    # about panel, to explain the project and do some shameless PR
+    
     tabPanel("About", 
              titlePanel("About"),
              h3("Project Background and Goals"),
@@ -43,26 +51,30 @@ ui <- navbarPage(
 
 server <- function(input, output) {
     output$league_plot <- renderPlot({
-        # Generate type based on input$plot_type from ui
+        
+        # Generate type based on input$league_plot from ui
         
         ifelse(
             input$league == "nba",
             
-            # If input$plot_type is "a", plot histogram of "waiting" column 
-            # from the faithful dataframe
+            # If input$plot_type is "nba", plot nba data
             
             plot   <- nba_plot,
             
-            # If input$plot_type is "b", plot histogram of "eruptions" column
-            # from the faithful dataframe
+            # Otherwise, plot mlb data (would change this if added more leagues)
             
             plot   <- mlb_plot
         )
         
+        # show the pre-made plot
+        
         plot
+        
+       # specify dimensions - otherwise it gets morphed by the window
         
     }, height = 700, width = 700)
 }
 
 # Run the application 
+
 shinyApp(ui = ui, server = server)
