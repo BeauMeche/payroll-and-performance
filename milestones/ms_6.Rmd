@@ -1,0 +1,51 @@
+---
+title: "Milestone 6"
+author: "Westley Cook"
+date: "3/26/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+What are all the questions my data could answer?
+
+- how salaries have changed over time
+
+- how salaries affect performance
+  - regular season wins
+  - playoff performance (championships, advancing an additional round, etc.)
+    
+- how each team has performed over time
+  - maybe the "buying wins" model works better for some teams than others
+    - maybe some teams are better at doing more with fewer resources (e.g. because of better
+      coaches, better front offices, better "team playing", etc.)
+      
+- whether data varies much by conference (NBA) or league (MLB)
+  - does NBA West produce better teams than East (in terms of playoff team quality,
+    number of championships, etc.)
+  - does one conference/league spend more than the other
+
+## How do I adjust for inflation?
+
+use blscrapeR (package)
+
+use geom_hover or gganimate or whatever to hover over dots and know what teams they are
+
+# Money spent is independent variable and wins/success is dependent variable;
+# trying to find out if money itself drives success, or if they tend to
+# fluctuate together (e.g. because teams that do well sell more tickets and get
+# more revenue and can then spend more to keep doing well)
+
+Interaction term: year and salary
+outcome variable: rs win pct
+
+Then each year would have its own slope; could then compare the effect of salary for each given year
+
+Optional video lecture for next week: multiple and logistic regression datacamp
+
+https://learn.datacamp.com/courses/multiple-and-logistic-regression
+
+for binary variables, e.g. 1 if won championship, 0 if not
+
