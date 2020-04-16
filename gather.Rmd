@@ -14,6 +14,7 @@ library(rvest)
 library(stringr)
 library(magrittr)
 library(gridExtra)
+library(blscrapeR)
 
 ```
 
@@ -209,7 +210,7 @@ team_season_data <- function(team_url, franchise_id){
          conf_standing = as.numeric(conf_standing),
          playoff_wins = as.numeric(playoff_wins),
          playoff_losses = as.numeric(playoff_losses),
-         playoff_win_pct = as.numeric(playoff_win_pct))%>% 
+         playoff_win_pct = as.numeric(playoff_win_pct)) %>% 
   mutate(franchise_id = franchise_id)
 }
 
@@ -433,6 +434,7 @@ nba_salaries %<>%
 nba_full <- nba_team_performance %>% 
   left_join(nba_salaries, by = c("team" = "mascot", "season")) %>% 
   mutate(season = as.factor(season)) %>% 
+  mutate(year = as.numeric(substr(season, start = 1, stop = 4)) + 1) %>% 
   mutate(conference = as.factor(conference)) %>% 
   mutate(performance = as.factor(performance)) %>% 
   mutate(performance = fct_relevel(performance,
@@ -442,7 +444,8 @@ nba_full <- nba_team_performance %>%
                                    "Lost Conf Finals",
                                    "Lost NBA Finals",
                                    "NBA Champions")) %>% 
-  mutate(franchise_id = as.factor(franchise_id))
+  mutate(franchise_id = as.factor(franchise_id)) %>% 
+  rename(payroll = team_salary)
 
 ```
 
@@ -612,7 +615,105 @@ nba_2 <- nba_full %>%
 grid.arrange(mlb_2, nba_2, ncol = 2)
 
 mlb_full %>% 
-  summarize(cor = cor(rs_win_pct, payroll))
+  summarize(cor = cor(rs_win_pct, payroll)) # cor = .217
+
+```
+
+
+```{r adjust-for-inflation, echo=FALSE}
+
+i2020 <- inflation_adjust(2020)
+
+# calculate dollar amount from some past year to 2020 dollars
+
+inflation_calc <- function(then_year, amount){
+  then_cpi <- i2020 %>% 
+    filter(year == then_year) %>% 
+    pull(avg_cpi)
+  now_cpi <- i2020 %>% 
+    filter(year == 2020) %>% 
+    pull(avg_cpi)
+  
+  amount * now_cpi / then_cpi
+}
+
+# add column with inflation adjustments for each year
+
+mlb_adjusted <- mlb_full %>% 
+  mutate(payroll_adjusted = map2_dbl(year, payroll, ~ inflation_calc(.x, .y)))
+
+# plot adjusted payroll against rs_win_pct
+
+mlb_adjusted %>% 
+  # mutate(log_payroll = log(payroll_adjusted)) %>% 
+  # filter(log_payroll > 16) %>% 
+  # summarize(cor(log_payroll, rs_win_pct))
+  ggplot(aes(payroll_adjusted, rs_win_pct)) +
+  geom_point(aes(color = ws_win)) +
+  geom_smooth(method = "lm", se = FALSE)
+
+# see some right-skewing of mlb payroll data
+  
+plot(density(mlb_adjusted$payroll_adjusted))
+
+# correlation between payroll_adjusted and wins
+
+mlb_adjusted %>% 
+  summarize(cor(payroll_adjusted, rs_win_pct)) # cor = .262
+
+# adjust nba data for inflation
+
+nba_adjusted <- nba_full %>% 
+  mutate(payroll_adjusted = map2_dbl(year, payroll, ~ inflation_calc(.x, .y)))
+
+# plot new data
+
+nba_adjusted %>% 
+  ggplot(aes(payroll_adjusted / 1000, rs_win_pct)) +
+  geom_point(na.rm = TRUE) + 
+  geom_smooth(method = "lm", se = FALSE, na.rm = TRUE)
+
+# find correlation coefficient
+
+nba_adjusted %>% 
+  summarize(cor(payroll_adjusted, rs_win_pct, us = "complete.obs")) # cor: .113
+
+```
+
+
+```{r}
+
+nba_adjusted %>% 
+  ggplot(aes(season, payroll_adjusted / 1000, color = performance)) +
+  geom_point(na.rm = TRUE)
+
+mlb_adjusted %>% 
+  ggplot(aes(year, payroll, color = ws_win)) +
+  geom_point()
+
+mlb_adjusted %>% 
+  select(year, team_id, payroll, payroll_adjusted)
+
+nba_adjusted
+
+# missing payroll data for:
+# 1986-87 Trail Blazers
+# 1986-87 Bucks
+# 1986-87 Clippers
+# 1986-87 Kings
+# 1986-87 Lakers
+# 1986-87 SuperSonics
+# 1986-87 Warriors
+# 1989-90 Magic
+# 1989-90 Pacers
+# 1989-90 Timberwolves
+
+```
+
+```{r save-to-rdata, echo=FALSE}
+
+save(mlb_adjusted, file = "data-files/mlb.Rdata")
+save(nba_adjusted, file = "data-files/nba.Rdata")
 
 ```
 
