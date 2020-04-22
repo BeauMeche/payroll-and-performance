@@ -12,15 +12,34 @@ load("mlb.Rdata")
 
 ###### PLOT TIME
 
-mlb_plot <- mlb_adjusted %>% 
-  ggplot(aes(payroll / 1000000, 
-             round(rs_win_pct, digits = 2))) +
-  geom_point() +
+# payroll_adjusted and rs_win_pct by season
+
+mlb_plot_1 <- mlb_adjusted %>% 
+  ggplot(aes(payroll_adjusted / 1000000, rs_win_pct)) +
+  geom_point(aes(text = name)) +
   facet_wrap(~year, scales = "free_x") +
-  labs(title = "MLB Team Payroll and Regular Season Win Percentage by Season",
-       subtitle = "Payroll and win percentage are positively associated
-       (Overall correlation coefficient: a somewhat weak 0.217)",
-       x = "Payroll (in millions of USD)",
+  labs(x = "Payroll (in millions of USD)",
        y = "Regular Season Win Percentage") +
   theme_classic() +
+  theme(axis.title = element_text(face = "bold", vjust = 0)) +
   geom_smooth(method = "lm", se = FALSE)
+
+# payroll_adjusted and rs_win_pct by team
+
+mlb_plot_2 <- mlb_adjusted %>% 
+  ggplot(aes(payroll_adjusted / 1000000, rs_win_pct, text = year)) +
+  geom_point() +
+  facet_wrap(~ franchise_id, scales = "free_x") +
+  labs(x = "Payroll (in millions of USD)",
+       y = "Regular Season Win Percentage") +
+  theme_classic() +
+  theme(axis.title = element_text(face = "bold", vjust = 0)) +
+  geom_smooth(method = "lm", se = FALSE)
+
+mlb_adjusted %>% 
+  ggplot(aes(year, payroll_adjusted / 1000000, color = franch_id)) +
+  geom_point()
+
+mlb_plot_1
+
+ggplotly(mlb_plot_2, tooltip = "text")
