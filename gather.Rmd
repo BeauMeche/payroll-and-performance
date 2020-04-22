@@ -15,6 +15,8 @@ library(stringr)
 library(magrittr)
 library(gridExtra)
 library(blscrapeR)
+library(gt)
+library(broom)
 
 ```
 
@@ -445,7 +447,8 @@ nba_full <- nba_team_performance %>%
                                    "Lost NBA Finals",
                                    "NBA Champions")) %>% 
   mutate(franchise_id = as.factor(franchise_id)) %>% 
-  rename(payroll = team_salary)
+  rename(payroll = team_salary,
+         full_team_name = team.y)
 
 ```
 
@@ -640,7 +643,9 @@ inflation_calc <- function(then_year, amount){
 # add column with inflation adjustments for each year
 
 mlb_adjusted <- mlb_full %>% 
-  mutate(payroll_adjusted = map2_dbl(year, payroll, ~ inflation_calc(.x, .y)))
+  mutate(
+    payroll_adjusted = map2_dbl(year, payroll, ~ inflation_calc(.x, .y))) %>% 
+  rename(franchise_id = franch_id)
 
 # plot adjusted payroll against rs_win_pct
 
@@ -659,7 +664,25 @@ plot(density(mlb_adjusted$payroll_adjusted))
 # correlation between payroll_adjusted and wins
 
 mlb_adjusted %>% 
-  summarize(cor(payroll_adjusted, rs_win_pct)) # cor = .262
+  summarize(cor(payroll_adjusted, rs_win_pct)) # cor = 0.262
+
+# correlation between payroll_adjusted and rs_win_pct by season 
+# NOTE: min cor = -0.056 in 1987, and 0 in 1990; max cor = 0.658 in 1998, and
+# 0.636 in 2016. WILD fluctuation
+# mean cor = 0.356 - which is pretty different from the overall 0.262
+
+mlb_adjusted %>% 
+  group_by(year) %>% 
+  summarize(cor = cor(payroll, rs_win_pct)) %>% 
+  ggplot(aes(year, cor)) +
+  geom_point()
+  
+  # gt() %>% 
+  # tab_header(title = "Correlation between Payroll and Regular Season Wins",
+  #            subtitle = "For MLB, by year") %>% 
+  # cols_label(year = "Year",
+  #            cor = "Correlation") %>% 
+  # cols_align(columns = "year", align = "left")
 
 # adjust nba data for inflation
 
@@ -673,10 +696,31 @@ nba_adjusted %>%
   geom_point(na.rm = TRUE) + 
   geom_smooth(method = "lm", se = FALSE, na.rm = TRUE)
 
-# find correlation coefficient
+# find overall correlation coefficient
 
 nba_adjusted %>% 
-  summarize(cor(payroll_adjusted, rs_win_pct, us = "complete.obs")) # cor: .113
+  summarize(cor(payroll_adjusted, rs_win_pct, use = "complete.obs")) # cor: .113
+
+# find correlation coefficient by season
+
+nba_adjusted %>% 
+  group_by(season) %>% 
+  summarize(cor = cor(payroll_adjusted, rs_win_pct, use = "complete.obs")) %>% 
+  ggplot(aes(season, cor)) +
+  geom_point()
+  
+  # gt() %>% 
+  # tab_header(title = "Correlation between Payroll and Regular Season Wins",
+  #            subtitle = "For NBA, by season") %>% 
+  # cols_label(season = "Season",
+  #            cor = "Correlation") %>% 
+  # cols_align(columns = "season", align = "left")
+
+# NOTE: min of 0.015 in 2005-06, but max of 0.635 in 2017-18. WILD fluctuation
+# mean cor is 0.36, quite a bit higher than the overall cor of .113 may suggest
+
+# logged cor is lower; not a scale problem
+
 
 ```
 
@@ -684,17 +728,14 @@ nba_adjusted %>%
 ```{r}
 
 nba_adjusted %>% 
-  ggplot(aes(season, payroll_adjusted / 1000, color = performance)) +
-  geom_point(na.rm = TRUE)
-
-mlb_adjusted %>% 
-  ggplot(aes(year, payroll, color = ws_win)) +
-  geom_point()
-
-mlb_adjusted %>% 
-  select(year, team_id, payroll, payroll_adjusted)
-
-nba_adjusted
+  ggplot(aes(payroll_adjusted / 1000000, rs_win_pct)) +
+  geom_point(na.rm = TRUE) +
+  facet_wrap(~ franchise_id, scales = "free_x") +
+  theme_classic() +
+  labs(title = "NBA Team Payroll and Regular Season Win Percentage by Team",
+       x = "Payroll (in millions of USD)",
+       y = "Regular Season Win Percentage") +
+  geom_smooth(method = "lm", se = FALSE, na.rm = TRUE)
 
 # missing payroll data for:
 # 1986-87 Trail Blazers
@@ -716,6 +757,46 @@ save(mlb_adjusted, file = "data-files/mlb.Rdata")
 save(nba_adjusted, file = "data-files/nba.Rdata")
 
 ```
+
+```{r ask-mitchel}
+
+# overall correlation vs mean of by-season correlations
+
+# leaving out observations with less than ~3-4 in facet_wrap (e.g. NA or OKC/NO)
+
+# is it worth doing regressions with small sample sizes (e.g. by team or by season)
+
+
+
+# SUGGESTIONS
+
+# interaction term between gini coefficient and year, to see if inequality in
+# the league affects how much payroll affects performance
+
+# interaction term by year in model to see if money matters more in some years
+# than in others
+
+lm(rs_win_pct ~ payroll_adjusted * as.factor(year), data = mlb_adjusted) %>% 
+  tidy() %>% 
+  arrange(estimate)
+
+nba_adjusted %>% 
+  mutate(rs_win_pct = rs_win_pct * 100,
+         payroll_adjusted = payroll_adjusted / 1000000) %>% 
+  lm(rs_win_pct ~ payroll_adjusted * as.factor(year), data = .) %>% 
+  tidy(conf.int = TRUE) %>% 
+  select(term, estimate, conf.low, conf.high)
+
+ggplot(mlb_adjusted, aes(payroll_adjusted, rs_win_pct, color = as.factor(year))) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE)
+
+nba_adjusted %>% 
+  ggplot(aes(payroll_adjusted, rs_win_pct, color = as.factor(year))) +
+  geom_point(na.rm = TRUE) +
+  geom_smooth(method = "lm", se = FALSE, na.rm = TRUE)
+```
+
 
 Could scrape NHL data from here if so inclined:
 https://en.wikipedia.org/wiki/List_of_team_payrolls_in_the_NHL
