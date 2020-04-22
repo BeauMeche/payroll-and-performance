@@ -23,10 +23,23 @@ ui <- navbarPage(
                  sidebarLayout(
                      sidebarPanel(
                          selectInput(
-                             "league_1",
+                             "league",
                              "League",
                              c("MLB" = "mlb", "NBA" = "nba")
-                         ),
+                         )
+                     ),
+                     mainPanel(
+                         h3("Change in Payroll over Time"),
+                         h4("Say something about the amount getting higher (even
+                            after adjusting for inflation) and the spread
+                            (inequality) getting larger - but the NBA seems to
+                            have done something about it circa 2008-09ish, 
+                            while the MLB hasn't really"),
+                         plotlyOutput("payroll")
+                     )
+                 ),
+                 sidebarLayout(
+                     sidebarPanel(
                          h4("text"),
                          p("add a description of what's happening in this plot
                            and what interactivity it has")
@@ -64,25 +77,17 @@ ui <- navbarPage(
                  br(),
                  br(),
                  br(),
-                 br(),
-                 br(),
-                 br(),
-                 br(),
-                 sidebarPanel(
-                     selectInput(
-                         "league_2",
-                         "League",
-                         c("MLB" = "mlb", "NBA" = "nba")
+                 sidebarLayout(
+                     sidebarPanel(
+                         h4("text"),
+                         p("add a description of what's happening in this plot
+                               and what interactivity it has")
                      ),
-                     h4("text"),
-                     p("add a description of what's happening in this plot
-                           and what interactivity it has")
-                 ),
-                 mainPanel(
-                     h3("Payroll and Win Percentage by Team"),
-                     h4("[insert descriptive text here]"),
-                     plotlyOutput("by_team")
-                )
+                     mainPanel(
+                         h3("Payroll and Win Percentage by Team"),
+                         h4("[insert descriptive text here]"),
+                         plotlyOutput("by_team")
+                    ))
              )),
     
     # model panel, to talk more about model and regression results
@@ -106,23 +111,14 @@ ui <- navbarPage(
              You can reach me at wkcook@college.harvard.edu.")))
 
 server <- function(input, output) {
-    output$by_year <- renderPlotly({
+    
+    output$payroll <- renderPlotly({
         
-        # Choose league to plot based on input$league from ui
-        
-        ifelse(
-            input$league_1 == "nba",
-            
-            # If input$plot_type is "nba", plot nba data
-            
-            plot1 <- nba_plot_1,
-            
-            # Otherwise, plot mlb data (would change this if added more leagues)
-            
-            plot1 <- mlb_plot_1
-        )
-        
-        # make the plot
+        ifelse(input$league == "nba",
+               
+               plot1 <- nba_plot_1,
+               
+               plot1 <- mlb_plot_1)
         
         ggplotly(plot1, tooltip = "text") %>% 
             config(modeBarButtonsToRemove = list("sendDataToCloud", 
@@ -133,19 +129,15 @@ server <- function(input, output) {
                                                  "toggleSpikelines",
                                                  "editInChartStudio",
                                                  "zoom2d",
-                                                 "pan2d")) %>% 
-            layout(height = 900, width = 1100)
-        
-       # specify dimensions - otherwise it gets morphed by the window
-        
+                                                 "pan2d"))
     })
-
-    output$by_team <- renderPlotly({
     
+    output$by_year <- renderPlotly({
+        
         # Choose league to plot based on input$league from ui
         
         ifelse(
-            input$league_2 == "nba",
+            input$league == "nba",
             
             # If input$plot_type is "nba", plot nba data
             
@@ -156,7 +148,7 @@ server <- function(input, output) {
             plot2 <- mlb_plot_2
         )
         
-        # show the plot
+        # make the plot
         
         ggplotly(plot2, tooltip = "text") %>% 
             config(modeBarButtonsToRemove = list("sendDataToCloud", 
@@ -168,7 +160,41 @@ server <- function(input, output) {
                                                  "editInChartStudio",
                                                  "zoom2d",
                                                  "pan2d")) %>% 
-            layout(height = 900, width = 1100)
+            layout(height = 800, width = 1050)
+        
+       # specify dimensions - otherwise it gets morphed by the window
+        
+    })
+
+    output$by_team <- renderPlotly({
+    
+        # Choose league to plot based on input$league from ui
+        
+        ifelse(
+            input$league == "nba",
+            
+            # If input$plot_type is "nba", plot nba data
+            
+            plot3 <- nba_plot_3,
+            
+            # Otherwise, plot mlb data (would change this if added more leagues)
+            
+            plot3 <- mlb_plot_3
+        )
+        
+        # show the plot
+        
+        ggplotly(plot3, tooltip = "text") %>% 
+            config(modeBarButtonsToRemove = list("sendDataToCloud", 
+                                                 "hoverClosestCartesian", 
+                                                 "hoverCompareCartesian", 
+                                                 "select2d", 
+                                                 "lasso2d", 
+                                                 "toggleSpikelines",
+                                                 "editInChartStudio",
+                                                 "zoom2d",
+                                                 "pan2d")) %>% 
+            layout(height = 800, width = 1050)
         
         # specify dimensions - otherwise it gets morphed by the window
         
