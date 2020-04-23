@@ -641,11 +641,15 @@ inflation_calc <- function(then_year, amount){
 }
 
 # add column with inflation adjustments for each year
+# add column with payroll rank for each year (how much spent relative to other
+# teams, 1 is lowest and 30 is highest)
 
 mlb_adjusted <- mlb_full %>% 
   mutate(
     payroll_adjusted = map2_dbl(year, payroll, ~ inflation_calc(.x, .y))) %>% 
-  rename(franchise_id = franch_id)
+  rename(franchise_id = franch_id) %>% 
+  group_by(year) %>% 
+  mutate(payroll_rank = rank(payroll))
 
 # plot adjusted payroll against rs_win_pct
 
@@ -687,7 +691,10 @@ mlb_adjusted %>%
 # adjust nba data for inflation
 
 nba_adjusted <- nba_full %>% 
-  mutate(payroll_adjusted = map2_dbl(year, payroll, ~ inflation_calc(.x, .y)))
+  mutate(payroll_adjusted = map2_dbl(year, payroll,
+                                     ~ inflation_calc(.x, .y))) %>% 
+  group_by(season) %>% 
+  mutate(payroll_rank = rank(payroll))
 
 # plot new data
 
