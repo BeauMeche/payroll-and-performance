@@ -58,6 +58,10 @@ ui <- navbarPage(
                  br(),
                  br(),
                  br(),
+                 br(),
+                 br(),
+                 br(),
+                 br(),
                  sidebarLayout(
                      sidebarPanel(
                          h4("text"),
@@ -73,7 +77,9 @@ ui <- navbarPage(
                             some teams win no matter how much they spend? Do
                             some teams spend indescriminately and still lose?"),
                          plotlyOutput("by_team")
-                    ))
+                    )),
+                 br(),
+                 br()
              )),
     
     # model panel, to talk more about model and regression results
@@ -136,7 +142,7 @@ server <- function(input, output) {
         
         # make the plot
         
-        ggplotly(plot2, tooltip = "text") %>% 
+        ggplotly(plot2, tooltip = "text", height = 800, width = 1050) %>% 
             config(modeBarButtonsToRemove = list("sendDataToCloud", 
                                                  "hoverClosestCartesian", 
                                                  "hoverCompareCartesian", 
@@ -145,8 +151,7 @@ server <- function(input, output) {
                                                  "toggleSpikelines",
                                                  "editInChartStudio",
                                                  "zoom2d",
-                                                 "pan2d")) %>% 
-            layout(height = 800, width = 1050)
+                                                 "pan2d"))
         
        # specify dimensions - otherwise it gets morphed by the window
         
@@ -179,7 +184,7 @@ server <- function(input, output) {
         
         # show the plot
         
-        ggplotly(plot3, tooltip = "text") %>% 
+        ggplotly(plot3, tooltip = "text", height = 800, width = 1050) %>% 
             config(modeBarButtonsToRemove = list("sendDataToCloud", 
                                                  "hoverClosestCartesian", 
                                                  "hoverCompareCartesian", 
@@ -188,8 +193,7 @@ server <- function(input, output) {
                                                  "toggleSpikelines",
                                                  "editInChartStudio",
                                                  "zoom2d",
-                                                 "pan2d")) %>% 
-            layout(height = 800, width = 1050)
+                                                 "pan2d"))
         
         # specify dimensions - otherwise it gets morphed by the window
         
