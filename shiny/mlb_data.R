@@ -47,10 +47,37 @@ mlb_plot_3 <- mlb_adjusted %>%
   theme(axis.title = element_text(face = "bold", vjust = 0)) +
   geom_smooth(method = "lm", se = FALSE)
 
-mlb_adjusted %>% 
-  ggplot(aes(year, payroll_adjusted / 1000000, color = franch_id)) +
-  geom_point()
 
-mlb_plot_1
 
-ggplotly(mlb_plot_1, tooltip = "text")
+###### TABLES
+
+# table for cor between payroll and wins by year
+
+mlb_year_cor_table <- mlb_adjusted %>% 
+  group_by(year) %>% 
+  summarize(cor = cor(payroll_adjusted, rs_win_pct)) %>%
+  mutate(cor = round(cor, digits = 2)) %>% 
+  gt() %>%
+  tab_header(title = "Payroll and Regular Season Wins",
+             subtitle = "For MLB, by franchise") %>%
+  cols_label(year = "Year",
+             cor = "Correlation") %>%
+  cols_align(columns = "year", align = "left") %>% 
+  tab_options(container.height = 700)
+
+# table for cor between payroll and wins by team
+
+mlb_team_cor_table <- mlb_adjusted %>% 
+  group_by(franchise_id) %>% 
+  summarize(cor = cor(payroll_adjusted, rs_win_pct)) %>%
+  mutate(cor = round(cor, digits = 2)) %>% 
+  gt() %>%
+  tab_header(title = "Payroll and Regular Season Wins",
+             subtitle = "For MLB, by franchise") %>%
+  cols_label(franchise_id = "Franchise",
+             cor = "Correlation") %>%
+  cols_align(columns = "franchise_id", align = "left") %>% 
+  tab_options(container.height = 700)
+
+mlb_year_cor_table
+

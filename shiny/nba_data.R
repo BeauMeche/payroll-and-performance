@@ -3,12 +3,13 @@ library(janitor)
 library(rvest)
 library(stringr)
 library(magrittr)
+library(gt)
 
 # load nba data saved in gather.Rmd
 
 load("nba.Rdata")
 
-###### PLOT TIME
+###### PLOTS
 
 # plotting change in payroll over time
 
@@ -45,4 +46,36 @@ nba_plot_3 <- nba_adjusted %>%
   theme(axis.title = element_text(face = "bold", vjust = 0)) +
   geom_smooth(method = "lm", se = FALSE)
 
-ggplotly(nba_plot_1, tooltip = "text")
+
+
+###### TABLES
+
+# table for cor between payroll and wins by year
+
+nba_year_cor_table <- nba_adjusted %>% 
+  group_by(season) %>% 
+  summarize(cor = cor(payroll_adjusted, rs_win_pct, use = "complete.obs")) %>%
+  mutate(cor = round(cor, digits = 2)) %>% 
+  gt() %>%
+  tab_header(title = "Payroll and Regular Season Wins",
+             subtitle = "For NBA, by season") %>%
+  cols_label(season = "Season",
+             cor = "Correlation") %>%
+  cols_align(columns = "season", align = "left") %>% 
+  tab_options(container.height = 700)
+
+# table for cor between payroll and wins by team
+
+nba_team_cor_table <- nba_adjusted %>% 
+  group_by(franchise_id) %>% 
+  summarize(cor = cor(payroll_adjusted, rs_win_pct, use = "complete.obs")) %>%
+  mutate(cor = round(cor, digits = 2)) %>% 
+  gt() %>%
+  tab_header(title = "Payroll and Regular Season Wins",
+             subtitle = "For NBA, by team") %>%
+  cols_label(franchise_id = "Franchise",
+             cor = "Correlation") %>%
+  cols_align(columns = "franchise_id", align = "left") %>% 
+  tab_options(container.height = 700)
+
+nba_year_cor_table

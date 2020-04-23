@@ -25,7 +25,7 @@ ui <- navbarPage(
                          selectInput(
                              "league",
                              "League",
-                             c("MLB" = "mlb", "NBA" = "nba")
+                             c("NBA" = "nba", "MLB" = "mlb")
                          )
                      ),
                      mainPanel(
@@ -42,7 +42,8 @@ ui <- navbarPage(
                      sidebarPanel(
                          h4("text"),
                          p("add a description of what's happening in this plot
-                           and what interactivity it has")
+                           and what interactivity it has"),
+                         gt_output("year_cor")
                          ),
                      mainPanel(
                          h3("Payroll and Win Percentage by Year"),
@@ -57,35 +58,20 @@ ui <- navbarPage(
                  br(),
                  br(),
                  br(),
-                 br(),
-                 br(),
-                 br(),
-                 br(),
-                 br(),
-                 br(),
-                 br(),
-                 br(),
-                 br(),
-                 br(),
-                 br(),
-                 br(),
-                 br(),
-                 br(),
-                 br(),
-                 br(),
-                 br(),
-                 br(),
-                 br(),
-                 br(),
                  sidebarLayout(
                      sidebarPanel(
                          h4("text"),
                          p("add a description of what's happening in this plot
-                               and what interactivity it has")
+                               and what interactivity it has"),
+                         gt_output("team_cor")
                      ),
                      mainPanel(
                          h3("Payroll and Win Percentage by Team"),
-                         h4("[insert descriptive text here]"),
+                         h4("Do some teams spend more wisely than others (i.e. 
+                            by actually winning more when they spend more,
+                            instead of over-spending for poor performance)? Do
+                            some teams win no matter how much they spend? Do
+                            some teams spend indescriminately and still lose?"),
                          plotlyOutput("by_team")
                     ))
              )),
@@ -165,6 +151,15 @@ server <- function(input, output) {
        # specify dimensions - otherwise it gets morphed by the window
         
     })
+    
+    output$year_cor <- render_gt({
+        
+        ifelse(input$league == "nba",
+               cor_table <- nba_year_cor_table,
+               cor_table <- mlb_year_cor_table)
+        cor_table
+        
+    })
 
     output$by_team <- renderPlotly({
     
@@ -199,6 +194,15 @@ server <- function(input, output) {
         # specify dimensions - otherwise it gets morphed by the window
         
     })
+    
+    output$team_cor <- render_gt({
+        
+        ifelse(input$league == "nba",
+               cor_table <- nba_team_cor_table,
+               cor_table <- mlb_team_cor_table)
+        cor_table
+        
+        })
 
 }
 
