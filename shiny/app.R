@@ -26,7 +26,8 @@ ui <- navbarPage(
                              "league",
                              "League",
                              c("NBA" = "nba", "MLB" = "mlb")
-                         )
+                         ),
+                         h3("text")
                      ),
                      mainPanel(
                          h3("Change in Payroll over Time"),
@@ -70,7 +71,7 @@ ui <- navbarPage(
                          gt_output("team_cor")
                      ),
                      mainPanel(
-                         h3("Payroll and Win Percentage by Team"),
+                         h3("Payroll and Win Percentage by Franchise"),
                          h4("Do some teams spend more wisely than others (i.e. 
                             by actually winning more when they spend more,
                             instead of over-spending for poor performance)? Do
@@ -140,9 +141,18 @@ server <- function(input, output) {
             plot2 <- mlb_plot_2
         )
         
-        # make the plot
+        # assign the plot to ggplotly so hover reveals text and specify
+        # dimensions
         
-        ggplotly(plot2, tooltip = "text", height = 800, width = 1050) %>% 
+        gp2 <- ggplotly(plot2, tooltip = "text", height = 800, width = 1050)
+        
+        # change y-axis title position so it doesn't overlap with labels
+        
+        gp2[['x']][['layout']][['annotations']][[2]][['x']] <- -0.035
+        
+        # display plot, customizing mode bar
+        
+        gp2 %>% 
             config(modeBarButtonsToRemove = list("sendDataToCloud", 
                                                  "hoverClosestCartesian", 
                                                  "hoverCompareCartesian", 
@@ -152,9 +162,6 @@ server <- function(input, output) {
                                                  "editInChartStudio",
                                                  "zoom2d",
                                                  "pan2d"))
-        
-       # specify dimensions - otherwise it gets morphed by the window
-        
     })
     
     output$year_cor <- render_gt({
@@ -182,9 +189,18 @@ server <- function(input, output) {
             plot3 <- mlb_plot_3
         )
         
-        # show the plot
+        # assign the plot to ggplotly so hover reveals text and specify
+        # dimensions
         
-        ggplotly(plot3, tooltip = "text", height = 800, width = 1050) %>% 
+        gp3 <- ggplotly(plot3, tooltip = "text", height = 800, width = 1050)
+        
+        # change y-axis title position so it doesn't overlap with labels
+        
+        gp3[['x']][['layout']][['annotations']][[2]][['x']] <- -0.035
+        
+        # display plot, customizing mode bar
+        
+        gp3 %>% 
             config(modeBarButtonsToRemove = list("sendDataToCloud", 
                                                  "hoverClosestCartesian", 
                                                  "hoverCompareCartesian", 
@@ -194,8 +210,6 @@ server <- function(input, output) {
                                                  "editInChartStudio",
                                                  "zoom2d",
                                                  "pan2d"))
-        
-        # specify dimensions - otherwise it gets morphed by the window
         
     })
     

@@ -29,11 +29,23 @@ mlb_plot_2 <- mlb_adjusted %>%
   ggplot(aes(payroll_adjusted / 1000000, rs_win_pct)) +
   geom_point(aes(text = name)) +
   facet_wrap(~year, scales = "free_x") +
-  labs(x = "Payroll (in millions of USD)",
+  labs(x = "Payroll (in millions of USD, inflation-adjusted)",
        y = "Regular Season Win Percentage") +
   theme_classic() +
   theme(axis.title = element_text(face = "bold", vjust = 0)) +
   geom_smooth(method = "lm", se = FALSE)
+
+mlb_plot_2
+
+# gp <- ggplotly(mlb_plot_2, tooltip = "text")
+# 
+# str(gp[['x']][['layout']][['annotations']]) 
+# 
+# gp
+# 
+# gp[['x']][['layout']][['annotations']][[2]][['x']] <- -0.04
+# 
+# gp
 
 # payroll_rank and rs_win_pct by team
 
@@ -59,7 +71,7 @@ mlb_year_cor_table <- mlb_adjusted %>%
   mutate(cor = round(cor, digits = 2)) %>% 
   gt() %>%
   tab_header(title = "Payroll and Regular Season Wins",
-             subtitle = "For MLB, by franchise") %>%
+             subtitle = "For MLB, by year") %>%
   cols_label(year = "Year",
              cor = "Correlation") %>%
   cols_align(columns = "year", align = "left") %>% 
@@ -72,7 +84,7 @@ mlb_team_cor_table <- mlb_adjusted %>%
   summarize(cor = cor(payroll_rank, rs_win_pct)) %>%
   mutate(cor = round(cor, digits = 2)) %>% 
   gt() %>%
-  tab_header(title = "Payroll and Regular Season Wins",
+  tab_header(title = "Payroll Rank and Regular Season Wins",
              subtitle = "For MLB, by franchise") %>%
   cols_label(franchise_id = "Franchise",
              cor = "Correlation") %>%

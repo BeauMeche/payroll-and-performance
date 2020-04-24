@@ -28,7 +28,7 @@ nba_plot_2 <- nba_adjusted %>%
   ggplot(aes(payroll_adjusted / 1000000, rs_win_pct)) +
   geom_point(aes(text = full_team_name), na.rm = TRUE) +
   facet_wrap(~ season, scales = "free_x") +
-  labs(x = "Payroll (in millions of USD)",
+  labs(x = "Payroll (in millions of USD, inflation-adjusted)",
        y = "Regular Season Win Percentage") +
   theme_classic() +
   theme(axis.title = element_text(face = "bold"),
@@ -78,8 +78,8 @@ nba_team_cor_table <- nba_adjusted %>%
   summarize(cor = cor(payroll_rank, rs_win_pct, use = "complete.obs")) %>%
   mutate(cor = round(cor, digits = 2)) %>% 
   gt() %>%
-  tab_header(title = "Payroll and Regular Season Wins",
-             subtitle = "For NBA, by team") %>%
+  tab_header(title = "Payroll Rank and Regular Season Wins",
+             subtitle = "For NBA, by franchise") %>%
   cols_label(franchise_id = "Franchise",
              cor = "Correlation") %>%
   cols_align(columns = "franchise_id", align = "left") %>% 
