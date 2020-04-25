@@ -158,6 +158,10 @@ ui <- navbarPage(
     tabPanel("Model",
              titlePanel("Payroll and Wins: A Linear Model"),
              sidebarLayout(
+                 
+                 # sidebar panel holds selector to pick league to view and a few
+                 # observational notes about the data itself
+                 
                  sidebarPanel(
                      h4(strong("Select a League")),
                      p("Note: the effects documented on this page are not
@@ -181,6 +185,9 @@ ui <- navbarPage(
                      p("Generally, teams in the MLB seem to experience a lower
                        effect than teams in the NBA")
                  ),
+                 
+                 # main panel holds plotly: payroll's effect on win pct by team
+                 
                  mainPanel(
                      h3(strong("Payroll's Effect on Win Percentage by Team")),
                      h4("Effect of Moving One Spot Up in Payroll Rank"),
@@ -191,6 +198,9 @@ ui <- navbarPage(
                  )
              ),
              sidebarLayout(
+                 
+                 # sidebar panel holds observational notes about the data
+                 
                  sidebarPanel(
                      h4(strong("Observations:")),
                      h4("NBA"),
@@ -207,6 +217,9 @@ ui <- navbarPage(
                         additional payroll is associated, on average, with less 
                        than a .5 point increase in win percentage)")
                  ),
+                 
+                 # main panel holds plotly: payroll's effect on win pct by year
+                 
                  mainPanel(
                      h3(strong("Payroll's Effect on Win Percentage by Season")),
                      h4("Effect of Spending Additional $1 Million"),
@@ -258,6 +271,9 @@ ui <- navbarPage(
              p(p8, a(href = p8_link, "GitHub",
                      .noWS = "outside", target = "_blank"),
                p8a),
+             
+             # aaaand here
+             
              p(p9, a(href = p9_link, "here",
                      .noWS = "outside", target = "_blank"),
                ".")
