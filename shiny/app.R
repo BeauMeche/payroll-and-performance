@@ -23,7 +23,7 @@ ui <- navbarPage(
                  sidebarLayout(
                      sidebarPanel(
                          h4(strong("Select a League")),
-                         p("Note: displays best in large window, and may take
+                         p("Note: displays best in large windows, and may take
                             time to load"),
                          selectInput(
                              "league",
@@ -184,11 +184,11 @@ server <- function(input, output) {
         # assign the plot to ggplotly so hover reveals text and specify
         # dimensions
         
-        gp2 <- ggplotly(plot2, tooltip = "text", height = 800, width = 1050)
+        gp2 <- ggplotly(plot2, tooltip = "text", height = 750, width = 950)
         
         # change y-axis title position so it doesn't overlap with labels
         
-        gp2[['x']][['layout']][['annotations']][[2]][['x']] <- -0.035
+        gp2[['x']][['layout']][['annotations']][[2]][['x']] <- -0.04
         
         # display plot, customizing mode bar
         
@@ -271,11 +271,11 @@ server <- function(input, output) {
         # assign the plot to ggplotly so hover reveals text and specify
         # dimensions
         
-        gp3 <- ggplotly(plot3, tooltip = "text", height = 800, width = 1050)
+        gp3 <- ggplotly(plot3, tooltip = "text", height = 750, width = 950)
         
         # change y-axis title position so it doesn't overlap with labels
         
-        gp3[['x']][['layout']][['annotations']][[2]][['x']] <- -0.035
+        gp3[['x']][['layout']][['annotations']][[2]][['x']] <- -0.04
         
         # display plot, customizing mode bar
         

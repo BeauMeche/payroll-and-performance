@@ -23,6 +23,7 @@ mlb_plot_1 <- mlb_adjusted %>%
   scale_x_continuous(breaks = seq(1985, 2015, 5)) +
   geom_smooth(method = "gam", se = FALSE, color = "gray")
 
+
 # payroll_adjusted and rs_win_pct by season
 
 mlb_plot_2 <- mlb_adjusted %>% 
@@ -34,6 +35,7 @@ mlb_plot_2 <- mlb_adjusted %>%
   theme_classic() +
   theme(axis.title = element_text(face = "bold", vjust = 0)) +
   geom_smooth(method = "lm", se = FALSE)
+
 
 # payroll_rank and rs_win_pct by team
 
@@ -75,6 +77,4 @@ mlb_team_cor_table <- mlb_adjusted %>%
              cor = md("**Correlation Coefficient**")) %>%
   cols_align(columns = "franchise_id", align = "left") %>% 
   tab_options(container.height = 750)
-
-mlb_team_cor_table
 
