@@ -13,74 +13,97 @@ ui <- navbarPage(
     
     # title
     
-    "Payroll and Performance: Comparing MLB and the NBA",
+    "Payroll and Performance in the NBA and MLB",
     
     # plots panel, which will have plots to show data by league
     
-    tabPanel("Plots",
+    tabPanel("Trends",
              fluidPage(
-                 titlePanel("Comparing Leagues"),
+                 titlePanel("Payroll and Regular Season Win Percentage"),
                  sidebarLayout(
                      sidebarPanel(
+                         h4(strong("Select a League")),
+                         p("Note: displays best in large window, and may take
+                            time to load"),
                          selectInput(
                              "league",
                              "League",
                              c("NBA" = "nba", "MLB" = "mlb")
                          ),
-                         h3("text")
+                         p("All plots on this page are interactive; try hovering
+                            your mouse over a point!"),
+                         p("A control bar at the top of each plot offers 
+                            additional options such as zoom, autoscale,
+                            downloading as png, and resetting to the default.")
                      ),
                      mainPanel(
-                         h3("Change in Payroll over Time"),
-                         h4("Say something about the amount getting higher (even
-                            after adjusting for inflation) and the spread
-                            (inequality) getting larger - but the NBA seems to
-                            have done something about it circa 2008-09ish, 
-                            while the MLB hasn't really"),
+                         h3(strong("Change in Payroll over Time, 1985-2018")),
+                         tags$ul(
+                            tags$li(h4("Tremendous growth in payroll, even after 
+                                    adjusting for inflation")),
+                            tags$li(h4(textOutput("payroll_over_time"))),
+                         ),
                          plotlyOutput("payroll")
                      )
                  ),
                  sidebarLayout(
                      sidebarPanel(
-                         h4("text"),
-                         p("add a description of what's happening in this plot
-                           and what interactivity it has"),
+                         h4(strong("Payroll and Regular Season Wins: Correlation
+                                   Table"),
+                            align = "center"),
+                         h4(textOutput("year_cor_text"),
+                            align = "center"),
+                         h5(textOutput("year_cor_max"),
+                            align = "center"),
+                         h5(textOutput("year_cor_min"),
+                            align = "center"),
+                         h5(textOutput("year_cor_avg"),
+                            align = "center"),
                          gt_output("year_cor")
-                         ),
+                     ),
                      mainPanel(
-                         h3("Payroll and Win Percentage by Year"),
-                         h4("Overall correlation is stronger for MLB than for 
-                            NBA, but strength of correlation fluctuates
-                            considerably from one year to another"),
-                         plotlyOutput("by_year",
-                                          # hover = "plot_hover",
-                                          # hoverDelay = 0
-                                          ))),
-                 br(),
-                 br(),
-                 br(),
-                 br(),
+                         h3(strong("Relationship by Year")),
+                         h4("Does the relationship between payroll and win
+                            percentage vary by year? Clearly, the answer is 
+                            yes."),
+                         plotlyOutput("by_year")
+                    )
+                 ),
                  br(),
                  br(),
                  br(),
                  br(),
                  sidebarLayout(
                      sidebarPanel(
-                         h4("text"),
-                         p("add a description of what's happening in this plot
-                               and what interactivity it has"),
+                         h4(strong("Payroll and Regular Season Wins:
+                                    Correlation Table"),
+                            align = "center"),
+                         h4(textOutput("team_cor_text"),
+                            align = "center"),
+                         h5(textOutput("team_cor_max"),
+                            align = "center"),
+                         h5(textOutput("team_cor_min"),
+                            align = "center"),
+                         h5(textOutput("team_cor_avg"),
+                            align = "center"),
                          gt_output("team_cor")
                      ),
                      mainPanel(
-                         h3("Payroll and Win Percentage by Franchise"),
-                         h4("Do some teams spend more wisely than others (i.e. 
-                            by actually winning more when they spend more,
-                            instead of over-spending for poor performance)? Do
-                            some teams win no matter how much they spend? Do
-                            some teams spend indescriminately and still lose?"),
+                         h3(strong("Relationship by Franchise")),
+                         h4("Does the relationship between payroll and win
+                            percentage vary by franchise? Again, the answer is
+                            yes."),
+                         h4("Most teams tend to earn more wins when they spend 
+                            more on payroll. But others see no strong 
+                            relationship between payroll and win percentage, and
+                            a few have the dubious distinction of experiencing a
+                            NEGATIVE relationship - meaning they tend to win 
+                            LESS when they spend more than their competitors."),
+                         p(strong("Note the x axis: payroll rank is how a team's
+                            spending in a season compared to others in the
+                            league (1 is lowest and 30 is highest).")),
                          plotlyOutput("by_team")
-                    )),
-                 br(),
-                 br()
+                    ))
              )),
     
     # model panel, to talk more about model and regression results
@@ -103,7 +126,24 @@ ui <- navbarPage(
              with a secondary in Government. 
              You can reach me at wkcook@college.harvard.edu.")))
 
+
+
+
+
 server <- function(input, output) {
+    
+    output$payroll_over_time <- renderText({
+        
+        payroll_over_time_text <- ifelse(input$league == "nba",
+               
+               "In the NBA, inequality has also grown over time, though the 
+               spread was widest between 1997 and 2008",
+               
+               "In the MLB, inequality has grown massively, led by the 
+               high-spending New York Yankees")
+        
+        payroll_over_time_text
+    })
     
     output$payroll <- renderPlotly({
         
@@ -164,12 +204,51 @@ server <- function(input, output) {
                                                  "pan2d"))
     })
     
+    output$year_cor_text <- renderText({
+        
+        ifelse(input$league == "nba",
+               year_cor_subtitle <- "For NBA, by season",
+               year_cor_subtitle <- "For MLB, by year")
+        year_cor_subtitle
+        
+    })
+    
+    output$year_cor_max <- renderText({
+        
+        ifelse(input$league == "nba",
+               strong_year_cor <- "Relationship strongest (> 0.55) in 1984-85, 
+                                   1999-00, and 2017-18",
+               strong_year_cor <- "Relationship strongest (> 0.55) in 1998, 
+                                   1999, and 2016")
+        strong_year_cor
+    })
+    
+    output$year_cor_min <- renderText({
+        
+        ifelse(input$league == "nba",
+               weak_year_cor <- "Relationship weakest (<= 0.1) in 1986-87,
+                                 2005-06, and 2006-07",
+               weak_year_cor <- "Relationship weakest (< 0.05) in 1987, 1990,
+                                 and 1992")
+        weak_year_cor
+        
+    })
+    
+    output$year_cor_avg <- renderText({
+        
+        ifelse(input$league == "nba",
+               avg_year_cor <- "Average correlation across years: 0.36",
+               avg_year_cor <- "Average correlation across years: 0.356")
+        avg_year_cor
+
+    })
+    
     output$year_cor <- render_gt({
         
         ifelse(input$league == "nba",
-               cor_table <- nba_year_cor_table,
-               cor_table <- mlb_year_cor_table)
-        cor_table
+               year_cor_table <- nba_year_cor_table,
+               year_cor_table <- mlb_year_cor_table)
+        year_cor_table
         
     })
 
@@ -213,12 +292,49 @@ server <- function(input, output) {
         
     })
     
+    output$team_cor_text <- renderText({
+        
+        ifelse(input$league == "nba",
+               team_cor_subtitle <- "For NBA, by franchise",
+               team_cor_subtitle <- "For MLB, by franchise")
+    })
+    
+    output$team_cor_max <- renderText({
+        
+        ifelse(input$league == "nba",
+               strong_team_cor <- "Relationship strongest (> 0.55) for
+                                   Grizzlies, Bulls, Mavericks, and Cavaliers",
+               strong_team_cor <- "Relationship strongest (0.69!) for NYY;
+                                   greater than 0.5 for DET, ANA, and ATL")
+        strong_team_cor
+    })
+    
+    output$team_cor_min <- renderText({
+        
+        ifelse(input$league == "nba",
+               weak_team_cor <- "Relationship weakest (NEGATIVE!) for
+                                 Pelicans/Hornets, Knicks, and Trail Blazers",
+               weak_team_cor <- "Relationship weakest (NEGATIVE!) for TOR;
+                                 less than .05 for CIN")
+        weak_team_cor
+        
+    })
+    
+    output$team_cor_avg <- renderText({
+        
+        ifelse(input$league == "nba",
+               avg_team_cor <- "Average correlation across franchises: 0.342",
+               avg_team_cor <- "Average correlation across franchises: 0.265")
+        avg_team_cor
+        
+    })
+    
     output$team_cor <- render_gt({
         
         ifelse(input$league == "nba",
-               cor_table <- nba_team_cor_table,
-               cor_table <- mlb_team_cor_table)
-        cor_table
+               team_cor_table <- nba_team_cor_table,
+               team_cor_table <- mlb_team_cor_table)
+        team_cor_table
         
         })
 
