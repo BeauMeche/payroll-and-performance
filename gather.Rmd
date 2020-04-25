@@ -22,47 +22,36 @@ library(broom)
 
 MLB data downloaded as zip file from http://www.seanlahman.com/baseball-archive/statistics/
 
+Somebody who did something similar to me:
+https://courses.cs.washington.edu/courses/cse140/13wi/projects/mirae-report.pdf
+
 ```{r load-mlb-data, include=FALSE}
 
-mlb_salaries_raw <- read_csv("raw-data/mlb/salaries.csv") %>% 
+# loading data on mlb salaries
+
+mlb_salaries_raw <- read_csv("data-files/mlb/salaries.csv") %>% 
   clean_names()
 
-# NEED TO FIX NAMES FOR 'ghome' 'team_i_dlahman45' AND 'team_i_dretro'
-mlb_teams <- read_csv("raw-data/mlb/teams.csv") %>% 
+# loading data on mlb teams (which includes performance metrics)
+
+mlb_teams <- read_csv("data-files/mlb/teams.csv") %>% 
   clean_names()
 
-# Exploring Data initially:
-
-# Data is from here: http://www.seanlahman.com/baseball-archive/statistics/
-
-# Somebody who did something similar to me:
-# https://courses.cs.washington.edu/courses/cse140/13wi/projects/mirae-report.pdf
+# wrangling salary data to create payroll data for each team and year
 
 mlb_salaries <- mlb_salaries_raw %>% 
   group_by(team_id, year_id) %>% 
   summarize(payroll = sum(salary,
                           na.rm = TRUE))
 
-mlb_salaries %>% 
-  ggplot(aes(year_id, payroll)) +
-  geom_point() +
-  facet_wrap(~team_id)
-
-
+# joining team salary data to team data so I have playoff performance and 
+# payroll data in same dataframe
 
 mlb_teams_salaries <- mlb_salaries %>% 
   right_join(mlb_teams, by = c("year_id", "team_id")) %>% 
   filter(year_id > 1984)
 
-
-
-# Will want to adjust all dollar values for inflation
-
-# Could look into big/sudden changes in team spending (e.g. LAN in ~2010) to see
-# if the money had an impact
-
-# Will want to see if I can find data on total wins for the applicable time
-# window, not just on division or league or WS wins
+# reading in raw data on MLB regular season wins
 
 mlb_rs_wins <- read_html("https://www.baseball-reference.com/leagues/MLB/") %>% 
   html_nodes("table") %>% 
@@ -70,6 +59,9 @@ mlb_rs_wins <- read_html("https://www.baseball-reference.com/leagues/MLB/") %>%
   as.data.frame() %>% 
   na_if("") %>% 
   filter(G != "G")
+
+# tidying and cleaning the regular season wins data to prep for joining with
+# playoff performance and payroll data
 
 mlb_rs_wins %<>% 
   pivot_longer(cols = ARI:WSN,
@@ -89,8 +81,9 @@ mlb_rs_wins %<>%
 
 ```{r join-mlb-data, echo=FALSE}
 
-# team IDs to change to make this work:
-# LAA (should be ANA), MIA (should be FLA), TBR (should be TBD)
+# joining regular season win data with playoff performance and payroll data,
+# filtering for the years in which I have payroll data available, wrangling to
+# add a few variables, and selecting variables of interest
 
 mlb_full <- mlb_rs_wins %>% 
   left_join(mlb_teams_salaries, by = c("franch_id", 
@@ -105,31 +98,8 @@ mlb_full <- mlb_rs_wins %>%
          games_played, rs_wins, rs_win_pct,
          lg_id, rank, div_win, lg_win, ws_win)
 
-# in the above, rank appears to mean within the division; I could add my own
-# variable to show whether a team made the playoffs, but it would have to
-# somehow add the wild card teams - could figure out how to group by year and
-# league and take the top four teams, but that might leave out division
-# champs... This is a complicated manipulation :/ Might be easier just to take
-# division champs
-
-```
-
-```{r plot-mlb-data, echo=FALSE}
-
-mlb_full %>% 
-  ggplot(aes(payroll / 1000000, 
-             round(rs_win_pct, digits = 2))) +
-  geom_point() +
-  facet_wrap(~year, scales = "free_x") +
-  labs(title = "MLB Team Payroll and Regular Season Win Percentage",
-       subtitle = "See a positive correlation emerging over time",
-       x = "Payroll (millions)",
-       y = "Regular Season Win Percentage") +
-  theme_classic() +
-  scale_x_continuous(breaks = c(0, 100, 200)) +
-  geom_smooth(method = "lm", se = FALSE)
-
-ggsave("mlb_payroll_winpct_plot.png")
+# I don't have anything showing whether a team made the playoffs as a wildcard,
+# but it's a bit complicated to figure that out so I'm leaving it be
 
 ```
 
@@ -137,22 +107,28 @@ NBA data downloaded as zip file from https://data.world/datadavis/nba-salaries
 
 ```{r load-nba-data, include=FALSE}
 
-nba_players <- read_csv("raw-data/nba/players.csv") %>% 
-  clean_names()   # not that useful
+# reading in data on players in the NBA - don't need now, but it's here if I do
+# later
 
-nba_salaries_raw <- read_csv("raw-data/nba/salaries_1985to2018.csv") %>% 
-  clean_names()   # goes from 1984-85 to 2017-18
+nba_players <- read_csv("data-files/nba/players.csv") %>% 
+  clean_names()
+
+# reading in raw salary data for all players in the nba from 1984-85 to 2017-18
+
+nba_salaries_raw <- read_csv("data-files/nba/salaries_1985to2018.csv") %>% 
+  clean_names()
+
+# wrangling to create salary data for each team and year
 
 nba_salaries <- nba_salaries_raw %>% 
   group_by(team, season) %>% 
   summarize(team_salary = sum(salary))
 
-nba_salaries %>% 
-  ggplot(aes(as.factor(season), team_salary)) +
-  facet_wrap(~team) +
-  geom_point()
-
-# Found data on wins and postseason success!
+# reading in and cleaning data on wins and postseason success, starting with
+# just the atlanta hawks (because they're first alphabetically on the website
+# the data comes from) - there was a lot going on here, so it was a line-by-line
+# process over a period of time adding all the pieces I needed (as use can tell
+# by the repeated calls of mutate and rename)
 
 hawks <- read_html(
     "https://www.landofbasketball.com/teams/records_atlanta_hawks.htm") %>% 
@@ -173,7 +149,8 @@ hawks <- read_html(
                          season %>% substr(start = 1, stop = 7),
                          season)) %>% 
 
-# pattern from here: http://stla.github.io/stlapblog/posts/Numextract.html  
+  # str_extract pattern to remove characters from would-be numeric (eg turn 14th
+  # into 14) from here: http://stla.github.io/stlapblog/posts/Numextract.html
     
   mutate(standing = standing %>% str_extract("\\-*\\d+\\.*\\d*")) %>% 
   rename(conf_standing = standing) %>% 
@@ -185,6 +162,10 @@ hawks <- read_html(
          playoff_losses = as.numeric(playoff_losses),
          playoff_win_pct = as.numeric(playoff_win_pct)) %>% 
   mutate(franchise_id = "Hawks")
+
+# since I needed to repeat this reading-in and cleaning process for 30 teams, I
+# took the code I used to read in and clean the Hawks data and made a function
+# out of it to use on all the other teams
 
 team_season_data <- function(team_url, franchise_id){
   read_html(team_url) %>% 
@@ -216,15 +197,21 @@ team_season_data <- function(team_url, franchise_id){
   mutate(franchise_id = franchise_id)
 }
 
+# reading in data for celtics
+
 celtics <- team_season_data(
   "https://www.landofbasketball.com/teams/records_boston_celtics.htm",
-  "Celtics")
+  "Celtics"
+)
+
+# reading in data for nets
 
 nets <- team_season_data(
   "https://www.landofbasketball.com/teams/records_brooklyn_nets.htm",
   "Nets"
 )
 
+# reading in data for hornets
 # hornets only have 28 rows; started in 1988-89, missing 2002-03 and 2003-04
 
 hornets <- team_season_data(
@@ -232,56 +219,77 @@ hornets <- team_season_data(
   "Hornets/Bobcats"
 )
 
+# reading in data for bulls
+
 bulls <- team_season_data(
   "https://www.landofbasketball.com/teams/records_chicago_bulls.htm",
   "Bulls"
 )
+
+# reading in data for cavs
 
 cavs <- team_season_data(
   "https://www.landofbasketball.com/teams/records_cleveland_cavaliers.htm",
   "Cavaliers"
 )
 
+# reading in data for mavs
+
 mavs <- team_season_data(
   "https://www.landofbasketball.com/teams/records_dallas_mavericks.htm",
   "Mavericks"
 )
+
+# reading in data for nuggets
 
 nuggets <- team_season_data(
   "https://www.landofbasketball.com/teams/records_denver_nuggets.htm",
   "Nuggets"
 )
 
+# reading in data for pistons
+
 pistons <- team_season_data(
   "https://www.landofbasketball.com/teams/records_detroit_pistons.htm",
   "Pistons"
 )
+
+# reading in data for warriors
 
 warriors <- team_season_data(
   "https://www.landofbasketball.com/teams/records_golden_state_warriors.htm",
   "Warriors"
 )
 
+# reading in data for rockets
+
 rockets <- team_season_data(
   "https://www.landofbasketball.com/teams/records_houston_rockets.htm",
   "Rockets"
 )
+
+# reading in data for pacers
 
 pacers <- team_season_data(
   "https://www.landofbasketball.com/teams/records_indiana_pacers.htm",
   "Pacers"
 )
 
+# reading in data for clippers
+
 clippers <- team_season_data(
   "https://www.landofbasketball.com/teams/records_los_angeles_clippers.htm",
   "Clippers"
 )
+
+# reading in data for lakers
 
 lakers <- team_season_data(
   "https://www.landofbasketball.com/teams/records_los_angeles_lakers.htm",
   "Lakers"
 )
 
+# reading in data for grizzlies
 # grizzlies only have 23 rows; started in 1995-96
 
 grizzlies <- team_season_data(
@@ -289,6 +297,8 @@ grizzlies <- team_season_data(
   "Grizzlies"
 )
 
+
+# reading in data for heat
 # heat only have 30 rows; started in 1988-89
 
 heat <- team_season_data(
@@ -296,11 +306,14 @@ heat <- team_season_data(
   "Heat"
 )
 
+# reading in data for bucks
+
 bucks <- team_season_data(
   "https://www.landofbasketball.com/teams/records_milwaukee_bucks.htm",
   "Bucks"
 )
 
+# reading in data for twolves
 # twolves only have 29 rows; started in 1989-90
 
 twolves <- team_season_data(
@@ -308,6 +321,7 @@ twolves <- team_season_data(
   "Timberwolves"
 )
 
+# reading in data for pelicans
 # pelicans only have 16 rows; started in 2002-03
 
 pelicans <- team_season_data(
@@ -315,17 +329,23 @@ pelicans <- team_season_data(
   "Pelicans/Hornets"
 )
 
+# reading in data for knicks
+
 knicks <- team_season_data(
   "https://www.landofbasketball.com/teams/records_new_york_knicks.htm",
   "Knicks"
 )
 
+# reading in data for thunder and changing team name so it joins nicely with
+# payroll data
+
 thunder <- team_season_data(
   "https://www.landofbasketball.com/teams/records_oklahoma_city_thunder.htm",
-  "Thunder/Supersonics"
+  "Thunder/SuperSonics"
 ) %>% 
   mutate(team = gsub("Supersonics", "SuperSonics", team))
 
+# reading in data for magic
 # magic only have 29 rows; started in 1989-90
 
 magic <- team_season_data(
@@ -333,31 +353,42 @@ magic <- team_season_data(
   "Magic"
 )
 
+# reading in data for 76ers
+
 p76ers <- team_season_data(
   "https://www.landofbasketball.com/teams/records_philadelphia_76ers.htm",
   "76ers"
 )
+
+# reading in data for suns
 
 suns <- team_season_data(
   "https://www.landofbasketball.com/teams/records_phoenix_suns.htm",
   "Suns"
 )
 
+# reading in data for blazers
+
 blazers <- team_season_data(
   "https://www.landofbasketball.com/teams/records_portland_trailblazers.htm",
   "Trail Blazers"
 )
+
+# reading in data for kings
 
 kings <- team_season_data(
   "https://www.landofbasketball.com/teams/records_sacramento_kings.htm",
   "Kings"
 )
 
+# reading in data for spurs
+
 spurs <- team_season_data(
   "https://www.landofbasketball.com/teams/records_san_antonio_spurs.htm",
   "Spurs"
 )
 
+# reading in data for raptors
 # raptors only have 23 rows; started in 1995-96
 
 raptors <- team_season_data(
@@ -365,10 +396,14 @@ raptors <- team_season_data(
   "Raptors"
 )
 
+# reading in data for jazz (yay!)
+
 jazz <- team_season_data(
   "https://www.landofbasketball.com/teams/records_utah_jazz.htm",
   "Jazz"
 )
+
+# reading in data for wizards (who knew, they used to be called the bullets)
 
 wizards <- team_season_data(
   "https://www.landofbasketball.com/teams/records_washington_wizards.htm",
@@ -379,7 +414,9 @@ wizards <- team_season_data(
 
 ```{r join-nba-data, echo=FALSE}
 
-# putting all 30 teams in the same dataframe
+# putting all 30 teams in the same dataframe and standardizing performance
+# factor levels (don't need to specify conference; I can group by conference if
+# necessary since that variable already exists)
 
 nba_team_performance <- bind_rows(blazers,
                               bucks,
@@ -425,13 +462,17 @@ nba_team_performance <- bind_rows(blazers,
 #   group_by(franchise_id) %>% 
 #   count()
 
-# split team into two columns, one for team name and one for location
+# split nba_salaries variable team into two columns, one for team name and one
+# for location, to prep for joining with performance dataframe
 
 nba_salaries %<>% 
   mutate(location = word(team, start = 1, end = -2)) %>% 
   mutate(mascot = word(team, -1)) %>% 
   mutate(mascot = gsub("Blazers", "Trail Blazers", mascot)) %>% 
   mutate(location = gsub("Portland Trail", "Portland", location))
+
+# joining performance data with payroll data, specifying column types, and
+# changing some column names
 
 nba_full <- nba_team_performance %>% 
   left_join(nba_salaries, by = c("team" = "mascot", "season")) %>% 
@@ -452,182 +493,13 @@ nba_full <- nba_team_performance %>%
 
 ```
 
-```{r plot-nba-data, echo=FALSE}
-
-ggplot(nba_full, 
-       aes(season, team_salary / 1000000, color = performance)) +
-  geom_point(alpha = .7, na.rm = TRUE) +
-  scale_color_manual(breaks = c("Did not qualify",
-                                "Lost 1st Round",
-                                "Lost Conf Semis",
-                                "Lost Conf Finals",
-                                "Lost NBA Finals",
-                                "NBA Champions"),
-                     values = c("black",
-                                "purple",
-                                "red",
-                                "red",
-                                "green",
-                                "green")) +
-  theme_classic() +
-  theme(axis.text.x = element_text(angle = 90,
-                                   vjust = 1,
-                                   hjust = 0)) +
-  labs(title = "NBA Team Payroll and Playoff Result by Season",
-       color = "Playoff Result") +
-  xlab("Season") +
-  ylab("Team Payroll (millions)")
-
-nba_full %>% 
-  ggplot(aes(team_salary / 1000000, rs_win_pct)) +
-  geom_point(na.rm = TRUE) +
-  facet_wrap(~ season, scales = "free_x") +
-  theme_classic() +
-  labs(title = "NBA Team Payroll and Regular Season Win Percentage",
-       subtitle = "Observe changes over time",
-       x = "Payroll (millions)",
-       y = "Regular Season Win Percentage") +
-  geom_smooth(method = "lm", se = FALSE)
-
-# can add performance to this plot really easily by adding it as the color,
-# copying the specs from the plot above
-
-ggsave("nba_payroll_winpct_plot_free_x.png")
-
-```
-
-```{r nba-and-mlb-plots-with-colored-performance, echo=FALSE}
-
-mlb_full %>% 
-  ungroup() %>% 
-  ggplot(aes(payroll / 1000000, 
-             round(rs_win_pct, digits = 2),
-             color = div_win)) +
-  geom_point() +
-  facet_wrap(~year, scales = "free_x") +
-  labs(title = "MLB Team Payroll, Regular Season Wins, and Division Titles",
-       subtitle = "Money may buy wins, but not necessarily a division title",
-       x = "Payroll (in millions)",
-       y = "Regular Season Win Percentage") +
-  theme_classic() +
-  scale_x_continuous(breaks = c(0, 100, 200)) +
-  scale_color_manual(name = "Won Division",
-                     breaks = c("Y", "N"),
-                     labels = c("Yes", "No"),
-                     values = c("black", "red")) +
-  geom_smooth(method = "lm", se = FALSE)
-
-ggsave("mlb_payroll_winpct_performance_plot_free_x.png")
-
-nba_full %>% 
-  ggplot(aes(team_salary / 1000000, rs_win_pct, color = performance)) +
-  geom_point(na.rm = TRUE) +
-  facet_wrap(~ season, scales = "free_x") +
-  theme_classic() +
-  labs(title = "NBA Team Payroll, Regular Season Wins, and Playoff Results",
-       subtitle = "Money positively associated with team performance",
-       x = "Payroll (in millions)",
-       y = "Regular Season Win Percentage") +
-  scale_color_manual(name = "Playoff Performance",
-                     breaks = c("Did not qualify",
-                                "Lost 1st Round",
-                                "Lost Conf Semis",
-                                "Lost Conf Finals",
-                                "Lost NBA Finals",
-                                "NBA Champions"),
-                     values = c("black",
-                                "dark red",
-                                "pink",
-                                "red",
-                                "light blue",
-                                "green")) +
-  geom_smooth(method = "lm", se = FALSE)
-
-ggsave("nba_payroll_winpct_performance_plot_free_x.png")
-
-```
-
-Side-by-side comparison:
-
-```{r side-by-side, echo=FALSE}
-
-mlb_1 <- mlb_full %>% 
-  ggplot(aes(payroll / 1000000, 
-             round(rs_win_pct, digits = 2))) +
-  geom_point() +
-  facet_wrap(~year) +
-  labs(title = "MLB Team Payroll and Regular Season Win Percentage",
-       subtitle = "See a positive correlation emerging over time",
-       x = "Payroll (millions)",
-       y = "Regular Season Win Percentage") +
-  theme_classic() +
-  scale_x_continuous(breaks = c(0, 100, 200)) 
-
-nba_1 <- nba_full %>% 
-  ggplot(aes(team_salary / 1000000, rs_win_pct)) +
-  geom_point(na.rm = TRUE) +
-  facet_wrap(~ season) +
-  theme_classic() +
-  labs(title = "NBA Team Payroll and Regular Season Win Percentage",
-       subtitle = "Positive correlation observable in some years",
-       x = "Payroll (millions)",
-       y = "Regular Season Win Percentage")
-
-grid.arrange(mlb_1, nba_1, ncol = 2)
-
-mlb_2 <- mlb_full %>% 
-  ggplot(aes(payroll / 1000000, 
-             round(rs_win_pct, digits = 2),
-             color = div_win)) +
-  geom_point() +
-  facet_wrap(~year, scales = "free_x") +
-  labs(title = "MLB Team Payroll, Regular Season Wins, and Division Titles",
-       subtitle = "Money may buy wins, but not necessarily a division title",
-       x = "Payroll (in millions)",
-       y = "Regular Season Win Percentage") +
-  theme_classic() +
-  scale_x_continuous(breaks = c(0, 100, 200)) +
-  scale_color_manual(name = "Won Division",
-                     breaks = c("Y", "N"),
-                     labels = c("Yes", "No"),
-                     values = c("black", "red"))
-
-nba_2 <- nba_full %>% 
-  ggplot(aes(team_salary / 1000000, rs_win_pct, color = performance)) +
-  geom_point(na.rm = TRUE) +
-  facet_wrap(~ season, scales = "free_x") +
-  theme_classic() +
-  labs(title = "NBA Team Payroll, Regular Season Wins, and Playoff Results",
-       subtitle = "Money seems to have limited effect on team performance",
-       x = "Payroll (in millions)",
-       y = "Regular Season Win Percentage") +
-  scale_color_manual(name = "Playoff Performance",
-                     breaks = c("Did not qualify",
-                                "Lost 1st Round",
-                                "Lost Conf Semis",
-                                "Lost Conf Finals",
-                                "Lost NBA Finals",
-                                "NBA Champions"),
-                     values = c("black",
-                                "dark red",
-                                "pink",
-                                "red",
-                                "light blue",
-                                "green"))
-
-grid.arrange(mlb_2, nba_2, ncol = 2)
-
-mlb_full %>% 
-  summarize(cor = cor(rs_win_pct, payroll)) # cor = .217
-
-```
-
-
 ```{r adjust-for-inflation, echo=FALSE}
+
+# loading in tibble with CPI values to use in adjusting for inflation
 
 i2020 <- inflation_adjust(2020)
 
-# calculate dollar amount from some past year to 2020 dollars
+# function to calculate dollar amount from some past year to 2020 dollars
 
 inflation_calc <- function(then_year, amount){
   then_cpi <- i2020 %>% 
@@ -640,9 +512,9 @@ inflation_calc <- function(then_year, amount){
   amount * now_cpi / then_cpi
 }
 
-# add column with inflation adjustments for each year
-# add column with payroll rank for each year (how much spent relative to other
-# teams, 1 is lowest and 30 is highest)
+# adjust mlb data for inflation, adding one column with inflation adjustments
+# for each year and another column with payroll rank for each year (how much a
+# team spent relative to other teams, 1 is lowest and 30 is highest)
 
 mlb_adjusted <- mlb_full %>% 
   mutate(
@@ -651,44 +523,7 @@ mlb_adjusted <- mlb_full %>%
   group_by(year) %>% 
   mutate(payroll_rank = rank(payroll))
 
-# plot adjusted payroll against rs_win_pct
-
-mlb_adjusted %>% 
-  # mutate(log_payroll = log(payroll_adjusted)) %>% 
-  # filter(log_payroll > 16) %>% 
-  # summarize(cor(log_payroll, rs_win_pct))
-  ggplot(aes(payroll_adjusted, rs_win_pct)) +
-  geom_point(aes(color = ws_win)) +
-  geom_smooth(method = "lm", se = FALSE)
-
-# see some right-skewing of mlb payroll data
-  
-plot(density(mlb_adjusted$payroll_adjusted))
-
-# correlation between payroll_adjusted and wins
-
-mlb_adjusted %>% 
-  summarize(cor(payroll_adjusted, rs_win_pct)) # cor = 0.262
-
-# correlation between payroll_adjusted and rs_win_pct by season 
-# NOTE: min cor = -0.056 in 1987, and 0 in 1990; max cor = 0.658 in 1998, and
-# 0.636 in 2016. WILD fluctuation
-# mean cor = 0.356 - which is pretty different from the overall 0.262
-
-mlb_adjusted %>% 
-  group_by(year) %>% 
-  summarize(cor = cor(payroll, rs_win_pct)) %>% 
-  ggplot(aes(year, cor)) +
-  geom_point()
-  
-  # gt() %>% 
-  # tab_header(title = "Correlation between Payroll and Regular Season Wins",
-  #            subtitle = "For MLB, by year") %>% 
-  # cols_label(year = "Year",
-  #            cor = "Correlation") %>% 
-  # cols_align(columns = "year", align = "left")
-
-# adjust nba data for inflation
+# adjust nba data for inflation using the same process
 
 nba_adjusted <- nba_full %>% 
   mutate(payroll_adjusted = map2_dbl(year, payroll,
@@ -696,55 +531,7 @@ nba_adjusted <- nba_full %>%
   group_by(season) %>% 
   mutate(payroll_rank = rank(payroll))
 
-# plot new data
-
-nba_adjusted %>% 
-  ggplot(aes(payroll_adjusted / 1000, rs_win_pct)) +
-  geom_point(na.rm = TRUE) + 
-  geom_smooth(method = "lm", se = FALSE, na.rm = TRUE)
-
-# find overall correlation coefficient
-
-nba_adjusted %>% 
-  summarize(cor(payroll_adjusted, rs_win_pct, use = "complete.obs")) # cor: .113
-
-# find correlation coefficient by season
-
-nba_adjusted %>% 
-  group_by(season) %>% 
-  summarize(cor = cor(payroll_adjusted, rs_win_pct, use = "complete.obs")) %>% 
-  ggplot(aes(season, cor)) +
-  geom_point()
-  
-  # gt() %>% 
-  # tab_header(title = "Correlation between Payroll and Regular Season Wins",
-  #            subtitle = "For NBA, by season") %>% 
-  # cols_label(season = "Season",
-  #            cor = "Correlation") %>% 
-  # cols_align(columns = "season", align = "left")
-
-# NOTE: min of 0.015 in 2005-06, but max of 0.635 in 2017-18. WILD fluctuation
-# mean cor is 0.36, quite a bit higher than the overall cor of .113 may suggest
-
-# logged cor is lower; not a scale problem
-
-
-```
-
-
-```{r}
-
-nba_adjusted %>% 
-  ggplot(aes(payroll_adjusted / 1000000, rs_win_pct)) +
-  geom_point(na.rm = TRUE) +
-  facet_wrap(~ franchise_id, scales = "free_x") +
-  theme_classic() +
-  labs(title = "NBA Team Payroll and Regular Season Win Percentage by Team",
-       x = "Payroll (in millions of USD)",
-       y = "Regular Season Win Percentage") +
-  geom_smooth(method = "lm", se = FALSE, na.rm = TRUE)
-
-# missing payroll data for:
+# NOTE: missing payroll data for
 # 1986-87 Trail Blazers
 # 1986-87 Bucks
 # 1986-87 Clippers
@@ -760,50 +547,11 @@ nba_adjusted %>%
 
 ```{r save-to-rdata, echo=FALSE}
 
-save(mlb_adjusted, file = "data-files/mlb.Rdata")
-save(nba_adjusted, file = "data-files/nba.Rdata")
+save(mlb_adjusted, file = "shiny/data-files/mlb.Rdata")
+save(nba_adjusted, file = "shiny/data-files/nba.Rdata")
+save(nba_adjusted, mlb_adjusted, file = "data-files/mlb&nba.Rdata")
 
 ```
-
-```{r ask-mitchel}
-
-# overall correlation vs mean of by-season correlations
-
-# leaving out observations with less than ~3-4 in facet_wrap (e.g. NA or OKC/NO)
-
-# is it worth doing regressions with small sample sizes (e.g. by team or by season)
-
-
-
-# SUGGESTIONS
-
-# interaction term between gini coefficient and year, to see if inequality in
-# the league affects how much payroll affects performance
-
-# interaction term by year in model to see if money matters more in some years
-# than in others
-
-lm(rs_win_pct ~ payroll_adjusted * as.factor(year), data = mlb_adjusted) %>% 
-  tidy() %>% 
-  arrange(estimate)
-
-nba_adjusted %>% 
-  mutate(rs_win_pct = rs_win_pct * 100,
-         payroll_adjusted = payroll_adjusted / 1000000) %>% 
-  lm(rs_win_pct ~ payroll_adjusted * as.factor(year), data = .) %>% 
-  tidy(conf.int = TRUE) %>% 
-  select(term, estimate, conf.low, conf.high)
-
-ggplot(mlb_adjusted, aes(payroll_adjusted, rs_win_pct, color = as.factor(year))) +
-  geom_point() +
-  geom_smooth(method = "lm", se = FALSE)
-
-nba_adjusted %>% 
-  ggplot(aes(payroll_adjusted, rs_win_pct, color = as.factor(year))) +
-  geom_point(na.rm = TRUE) +
-  geom_smooth(method = "lm", se = FALSE, na.rm = TRUE)
-```
-
 
 Could scrape NHL data from here if so inclined:
 https://en.wikipedia.org/wiki/List_of_team_payrolls_in_the_NHL
