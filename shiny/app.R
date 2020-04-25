@@ -64,6 +64,7 @@ ui <- navbarPage(
                  
                  # sidebar to hold table of correlation coefficients by year
                  # all text except title customized by league
+                 
                  sidebarLayout(
                      sidebarPanel(
                          h4(strong("Payroll and Regular Season Wins: Correlation
@@ -77,7 +78,11 @@ ui <- navbarPage(
                             align = "center"),
                          h5(textOutput("year_cor_avg"),
                             align = "center"),
-                         gt_output("year_cor")
+                         gt_output("year_cor"),
+                         br(),
+                         p("Most seasons see a moderate correlation between
+                           payroll and win percentage, but the relationship
+                           is sometimes very weak or nonexistent.")
                      ),
                      
                      # main panel displays plotly of payroll and wins by year
@@ -113,7 +118,14 @@ ui <- navbarPage(
                             align = "center"),
                          h5(textOutput("team_cor_avg"),
                             align = "center"),
-                         gt_output("team_cor")
+                         gt_output("team_cor"),
+                         br(),
+                         p("Most teams tend to earn more wins when they spend 
+                           more on payroll. But others see no strong 
+                           relationship between payroll and win percentage, and 
+                           a few have the dubious distinction of experiencing a 
+                           NEGATIVE relationship - meaning they tend to win LESS
+                           when they spend more than their competitors.")
                      ),
                      
                      # main panel holds plotly of payroll and wins by team
@@ -126,42 +138,71 @@ ui <- navbarPage(
                          p(strong("Note the x axis: payroll rank is how a team's
                             spending in a season compared to others in the
                             league (1 is lowest)")),
-                         plotlyOutput("by_team"),
-                         
-                         # breaks keep text below from being covered up by plot
-                         
-                         br(),
-                         br(),
-                         br(),
-                         br(),
-                         br(),
-                         br(),
-                         br(),
-                         br(),
-                         br(),
-                         br(),
-                         br(),
-                         
-                         # descriptive paragraph below plot instead of above it,
-                         # which I don't really like but it keeps the table and
-                         # plot more or less in line with each other so I did it
-                         
-                         p("Most teams tend to earn more wins when they spend 
-                            more on payroll. But others see no strong 
-                            relationship between payroll and win percentage, and
-                            a few have the dubious distinction of experiencing a
-                            NEGATIVE relationship - meaning they tend to win 
-                            LESS when they spend more than their competitors.")
-                    ))
-             )),
+                         plotlyOutput("by_team")
+                         )
+                     )
+             )
+    ),
     
     # model panel, to talk more about model and regression results
     
     tabPanel("Models",
              titlePanel("Modeling the Data"),
-             p("Tour of the modeling choices you made and 
-              an explanation of why you made them"),
-             p("[Content forthcoming]")),
+             sidebarLayout(
+                 sidebarPanel(
+                     h4(strong("Select a League")),
+                     selectInput("league_2",
+                                 "",
+                                 c("NBA" = "nba", "MLB" = "mlb")),
+                     h4(strong("Observations:")),
+                     h4("NBA"),
+                     p("Roughly half of the teams' confidence intervals are
+                       above zero, indicating that they have a definite positive 
+                       association between payroll rank and win percentage"),
+                     p("The Knicks and Pelicans ought to consider new 
+                       management: their spending does not appear to be working 
+                       very well"),
+                     h4("MLB"),
+                     p("The New York Yankees have far and away the largest 
+                       effect of payroll rank on win percentage; for all but a 
+                       few of the other teams, the effect appears negligible"),
+                     p("Generally, teams in the MLB seem to experience a lower
+                       effect than teams in the NBA")
+                 ),
+                 mainPanel(
+                     h3(strong("Payroll's Effect on Win Percentage by Team")),
+                     h4("Effect of Moving One Spot Up in Payroll Rank"),
+                     p("Effect of 1 means a 1 point increase in win percentage.
+                       Bars show 95% confidence interval"),
+                     plotlyOutput("team_effect")
+                 )
+             ),
+             sidebarLayout(
+                 sidebarPanel(
+                     h4(strong("Observations:")),
+                     h4("NBA"),
+                     p("Payroll's effect on win percentage declined from 1985
+                       until 1997, at which point it leveled off"),
+                     p("In every season except 1984-95 and 1988-89, the 95% 
+                       confidence interval contains zero - so for all but two of
+                       the seasons, we can't be sure an additional $1 million on
+                       payroll had any effect at all on win percentage"),
+                     h4("MLB"),
+                     p("With the exception of 1985 (is there an error here?) 
+                       there seems to be no real effect of payroll on win 
+                       percentage regardless of season - and even the 1985 
+                       effect is small ($1 million additional payroll brings 
+                       less than .5 point increase in win percentage)")
+                 ),
+                 mainPanel(
+                     h3(strong("Payroll's Effect on Win Percentage by Season")),
+                     h4("Effect of Spending Additional $1 Million"),
+                     p("Effect of 1 means a 1 point increase in win percentage.
+                       Bars show 95% confidence interval"),
+                     plotlyOutput("year_effect")
+                 )
+             )
+    ),
     
     # about panel, to explain the project and do some shameless PR
     
@@ -177,7 +218,9 @@ ui <- navbarPage(
              p(p5),
              p(p6),
              h3("About Me"),
-             p(p7)))
+             p(p7)
+             )
+    )
 
 
 
@@ -413,6 +456,56 @@ server <- function(input, output) {
         # display plot, customizing mode bar
         
         gp3 %>% 
+            config(modeBarButtonsToRemove = list("sendDataToCloud", 
+                                                 "hoverClosestCartesian", 
+                                                 "hoverCompareCartesian", 
+                                                 "select2d", 
+                                                 "lasso2d", 
+                                                 "toggleSpikelines",
+                                                 "editInChartStudio",
+                                                 "zoom2d",
+                                                 "pan2d"))
+    })
+    
+    # render plotly: effect of payroll on wins with team interaction
+    
+    output$team_effect <- renderPlotly({
+        
+        # select league's plot to display based on input$league_2
+        
+        ifelse(input$league_2 == "nba",
+               mod_plot_1 <- nba_mod_plot_1,
+               mod_plot_1 <- mlb_mod_plot_1)
+        
+        # display the plot with hover revealing text, specify dimensions, and
+        # customize mode bar
+        
+        ggplotly(mod_plot_1, tooltip = "text", height = 400, width = 600) %>% 
+            config(modeBarButtonsToRemove = list("sendDataToCloud", 
+                                                 "hoverClosestCartesian", 
+                                                 "hoverCompareCartesian", 
+                                                 "select2d", 
+                                                 "lasso2d", 
+                                                 "toggleSpikelines",
+                                                 "editInChartStudio",
+                                                 "zoom2d",
+                                                 "pan2d"))
+    })
+    
+    # render plotly: effect of payroll on wins with season interaction
+    
+    output$year_effect <- renderPlotly({
+        
+        # select league's plot to display based on input$league_2
+        
+        ifelse(input$league_2 == "nba",
+               mod_plot_2 <- nba_mod_plot_2,
+               mod_plot_2 <- mlb_mod_plot_2)
+        
+        # display the plot with hover revealing text, specify dimensions, and
+        # customize mode bar
+        
+        ggplotly(mod_plot_2, tooltip = "text", height = 400, width = 600) %>% 
             config(modeBarButtonsToRemove = list("sendDataToCloud", 
                                                  "hoverClosestCartesian", 
                                                  "hoverCompareCartesian", 

@@ -66,7 +66,7 @@ nba_year_cor_table <- nba_adjusted %>%
   cols_label(season = md("**Season**"),
              cor = md("**Correlation Coefficient**")) %>%
   cols_align(columns = "season", align = "left") %>% 
-  tab_options(container.height = 450)
+  tab_options(container.height = 350)
 
 
 # table for cor between payroll and wins by team
@@ -79,12 +79,12 @@ nba_team_cor_table <- nba_adjusted %>%
   cols_label(franchise_id = md("**Franchise**"),
              cor = md("**Correlation Coefficient**")) %>%
   cols_align(columns = "franchise_id", align = "left") %>% 
-  tab_options(container.height = 450)
+  tab_options(container.height = 300)
 
 
 
 
-###### MODELING
+###### MODELS
 
 # assign interaction model for payroll_rank and franchise_id
 
@@ -99,7 +99,7 @@ nba_mod_team_tidy <- nba_mod_team %>%
 # keep only slope coefficients, and add variables showing slope (not just
 # offset) for each team
 
-nba_mod_team_tidy_effect <- nba_mod_team_tidy %>%  
+nba_mod_team_effect <- nba_mod_team_tidy %>%  
   filter(str_detect(term, "payroll_rank")) %>% 
   mutate(effect = ifelse(term == "payroll_rank",
                          estimate,
@@ -117,7 +117,7 @@ nba_mod_team_tidy_effect <- nba_mod_team_tidy %>%
 
 # mutate to clean names for plot display, then plot
 
-g <- nba_mod_team_tidy_effect %>% 
+nba_mod_plot_1 <- nba_mod_team_effect %>% 
   mutate(term = ifelse(term == "payroll_rank",
                        "76ers",
                        str_remove(term, "payroll_rank:franchise_id")),
@@ -127,14 +127,63 @@ g <- nba_mod_team_tidy_effect %>%
                                         sep = ": "))) +
   geom_point(color = "dark blue") +
   geom_errorbar(aes(ymin = lower, ymax = upper),
-                color = "dark blue", width = .2) +
+                color = "dark blue", width = .75) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
-  coord_flip() +
   theme_classic() +
-  labs(title = "Effect of Moving One Spot Up in Payroll Rank 
-on Regular Season Win Percentage",
-       x = "",
-       y = "Effect of 1 means a 1 point increase in win percentage
-Error bars show 95% confidence interval")
-  
+  labs(x = "",
+       y = "Effect") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+        axis.title = element_text(face = "bold"))
+
+
+
+# assign interaction model for payroll_adjusted and season
+
+nba_mod_year <- nba_adjusted %>% 
+  mutate(payroll_adjusted = payroll_adjusted / 1000000) %>% 
+  lm(rs_win_pct * 100 ~ payroll_adjusted * season, data = .)
+
+# tidy the model and select desired variables
+
+nba_mod_year_tidy <- nba_mod_year %>% 
+  tidy(conf.int = TRUE) %>% 
+  select(term, estimate, conf.low, conf.high)
+
+# keep only slope coefficients, and add variables showing slope (not just
+# offset) for each team
+
+nba_mod_year_effect <- nba_mod_year_tidy %>%  
+  filter(str_detect(term, "payroll_adjusted")) %>% 
+  mutate(effect = ifelse(term == "payroll_adjusted",
+                         estimate,
+                         estimate + filter(., term == "payroll_adjusted") %>% 
+                           pull(estimate)),
+         lower = ifelse(term == "payroll_adjusted",
+                        conf.low,
+                        conf.low + filter(., term == "payroll_adjusted") %>% 
+                          pull(estimate)),
+         upper = ifelse(term == "payroll_adjusted",
+                        conf.high,
+                        conf.high + filter(., term == "payroll_adjusted") %>% 
+                          pull(estimate)))
+
+# mutate to clean names for plot display, then plot
+
+nba_mod_plot_2 <- nba_mod_year_effect %>% 
+  mutate(term = ifelse(term == "payroll_adjusted",
+                       "1984-85",
+                       str_remove(term, "payroll_adjusted:season"))) %>% 
+  ggplot(aes(term, effect, text = paste(term, 
+                                        as.character(round(effect, digits = 3)),
+                                        sep = ": "))) +
+  geom_point(color = "dark blue") +
+  geom_errorbar(aes(ymin = lower, ymax = upper),
+                color = "dark blue", width = .75) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
+  theme_classic() +
+  labs(x = "",
+       y = "Effect") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+        axis.title = element_text(face = "bold"))
+
 
