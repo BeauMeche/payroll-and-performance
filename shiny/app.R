@@ -1,13 +1,15 @@
+# load necessary libraries
+
 library(shiny)
 library(plotly)
 
-# load mlb data, including plot
+# load necessary data and code from helper files, including pre-made plots and
+# tables to keep the server code below as clean and concise as possible
 
 source("mlb_data.R")
-
-# load nba data, including plot
-
 source("nba_data.R")
+
+# create UI
 
 ui <- navbarPage(
     
@@ -15,15 +17,18 @@ ui <- navbarPage(
     
     "Payroll and Performance in the NBA and MLB",
     
-    # plots panel, which will have plots to show data by league
+    # trends panel, which has plots (plotlys) and tables to show data by league
     
     tabPanel("Trends",
              fluidPage(
                  titlePanel("Payroll and Regular Season Win Percentage"),
+                 
+                 # sidebar with selector to choose league and explanatory text
+                 
                  sidebarLayout(
                      sidebarPanel(
                          h4(strong("Select a League")),
-                         p("Note: displays best in large windows, and may take
+                         p("Note: display is best in large windows, and may take
                             time to load"),
                          selectInput(
                              "league",
@@ -34,8 +39,14 @@ ui <- navbarPage(
                             your mouse over a point!"),
                          p("A control bar at the top of each plot offers 
                             additional options such as zoom, autoscale,
-                            downloading as png, and resetting to the default.")
+                            downloading as png, and resetting to the default."),
+                         p(strong("I recommend clicking autoscale on the larger
+                                  plots."))
                      ),
+                     
+                     # display plotly of payroll over time; second bullet point
+                     # changes by league
+                     
                      mainPanel(
                          h3(strong("Change in Payroll over Time, 1985-2018")),
                          tags$ul(
@@ -46,6 +57,9 @@ ui <- navbarPage(
                          plotlyOutput("payroll")
                      )
                  ),
+                 
+                 # sidebar to hold table of correlation coefficients by year
+                 # all text except title customized by league
                  sidebarLayout(
                      sidebarPanel(
                          h4(strong("Payroll and Regular Season Wins: Correlation
@@ -61,6 +75,9 @@ ui <- navbarPage(
                             align = "center"),
                          gt_output("year_cor")
                      ),
+                     
+                     # main panel displays plotly of payroll and wins by year
+                     
                      mainPanel(
                          h3(strong("Relationship by Year")),
                          h4("Does the relationship between payroll and win
@@ -69,10 +86,16 @@ ui <- navbarPage(
                          plotlyOutput("by_year")
                     )
                  ),
+                 
+                 # breaks to prevent plots (which have specified height/width)
+                 # from overlapping
+                 
                  br(),
                  br(),
-                 br(),
-                 br(),
+                 
+                 # sidebar to hold table of correlation coefficients by team
+                 # all text except title customized by league
+                 
                  sidebarLayout(
                      sidebarPanel(
                          h4(strong("Payroll and Regular Season Wins:
@@ -88,21 +111,43 @@ ui <- navbarPage(
                             align = "center"),
                          gt_output("team_cor")
                      ),
+                     
+                     # main panel holds plotly of payroll and wins by team
+                     
                      mainPanel(
                          h3(strong("Relationship by Franchise")),
                          h4("Does the relationship between payroll and win
                             percentage vary by franchise? Again, the answer is
                             yes."),
-                         h4("Most teams tend to earn more wins when they spend 
+                         p(strong("Note the x axis: payroll rank is how a team's
+                            spending in a season compared to others in the
+                            league (1 is lowest)")),
+                         plotlyOutput("by_team"),
+                         
+                         # breaks keep text below from being covered up by plot
+                         
+                         br(),
+                         br(),
+                         br(),
+                         br(),
+                         br(),
+                         br(),
+                         br(),
+                         br(),
+                         br(),
+                         br(),
+                         br(),
+                         
+                         # descriptive paragraph below plot instead of above it,
+                         # which I don't really like but it keeps the table and
+                         # plot more or less in line with each other so I did it
+                         
+                         p("Most teams tend to earn more wins when they spend 
                             more on payroll. But others see no strong 
                             relationship between payroll and win percentage, and
                             a few have the dubious distinction of experiencing a
                             NEGATIVE relationship - meaning they tend to win 
-                            LESS when they spend more than their competitors."),
-                         p(strong("Note the x axis: payroll rank is how a team's
-                            spending in a season compared to others in the
-                            league (1 is lowest and 30 is highest).")),
-                         plotlyOutput("by_team")
+                            LESS when they spend more than their competitors.")
                     ))
              )),
     
@@ -128,11 +173,16 @@ ui <- navbarPage(
 
 
 
-
+# create server
 
 server <- function(input, output) {
     
+    # reactive bullet point for payroll over time plot, giving a unique
+    # description for each league
+    
     output$payroll_over_time <- renderText({
+        
+        # choose text to display based on input$league selector
         
         payroll_over_time_text <- ifelse(input$league == "nba",
                
@@ -141,17 +191,20 @@ server <- function(input, output) {
                
                "In the MLB, inequality has grown massively, led by the 
                high-spending New York Yankees")
-        
-        payroll_over_time_text
     })
+    
+    # reactive plotly for payroll over time based on league selector; pre-made
+    # plots from helper code files
     
     output$payroll <- renderPlotly({
         
+        # choose plot based on input$league selector
+        
         ifelse(input$league == "nba",
-               
                plot1 <- nba_plot_1,
-               
                plot1 <- mlb_plot_1)
+        
+        # display plot with hover revealing text and customize mode bar
         
         ggplotly(plot1, tooltip = "text") %>% 
             config(modeBarButtonsToRemove = list("sendDataToCloud", 
@@ -165,32 +218,92 @@ server <- function(input, output) {
                                                  "pan2d"))
     })
     
+    # de-facto subtitle for cor by year table in sidebar
+    
+    output$year_cor_text <- renderText({
+        
+        # choose text to show based on input$league selector
+        
+        ifelse(input$league == "nba",
+               year_cor_subtitle <- "For NBA, by season",
+               year_cor_subtitle <- "For MLB, by year")
+    })
+    
+    # text to summarize strongest cor values from by-year table
+    
+    output$year_cor_max <- renderText({
+        
+        # choose text to show based on input$league selector
+        
+        ifelse(input$league == "nba",
+               strong_year_cor <- "Relationship strongest (> 0.55) in 1984-85, 
+                                   1999-00, and 2017-18",
+               strong_year_cor <- "Relationship strongest (> 0.55) in 1998, 
+                                   1999, and 2016")
+    })
+    
+    # text to summarize weakest cor values from by-year table
+    
+    output$year_cor_min <- renderText({
+        
+        # choose text to show based on input$league selector
+        
+        ifelse(input$league == "nba",
+               weak_year_cor <- "Relationship weakest (<= 0.1) in 1986-87,
+                                 2005-06, and 2006-07",
+               weak_year_cor <- "Relationship weakest (< 0.05) in 1987, 1990,
+                                 and 1992")
+    })
+    
+    # text to summarize average (mean) cor value from by-year table
+    
+    output$year_cor_avg <- renderText({
+        
+        # choose text to show based on input$league selector
+        
+        ifelse(input$league == "nba",
+               avg_year_cor <- "Average correlation across years: 0.36",
+               avg_year_cor <- "Average correlation across years: 0.356")
+    })
+    
+    # render the gt table for the sidebar display
+    
+    output$year_cor <- render_gt({
+        
+        # choose table to show based on input$league selector
+        
+        ifelse(input$league == "nba",
+               year_cor_table <- nba_year_cor_table,
+               year_cor_table <- mlb_year_cor_table)
+        
+        # show table
+        
+        year_cor_table
+        
+    })
+    
+    # reactive plotly to show payroll and wins by year, using plots from helper
+    # files
+    
     output$by_year <- renderPlotly({
         
-        # Choose league to plot based on input$league from ui
+        # choose plot based on input$league selector
         
         ifelse(
             input$league == "nba",
-            
-            # If input$plot_type is "nba", plot nba data
-            
             plot2 <- nba_plot_2,
-            
-            # Otherwise, plot mlb data (would change this if added more leagues)
-            
-            plot2 <- mlb_plot_2
-        )
+            plot2 <- mlb_plot_2)
         
-        # assign the plot to ggplotly so hover reveals text and specify
-        # dimensions
+        # assign the plot to ggplotly so hover reveals text, and specify
+        # dimensions - these were a pain with a large facet_wrap plot
         
-        gp2 <- ggplotly(plot2, tooltip = "text", height = 750, width = 950)
+        gp2 <- ggplotly(plot2, tooltip = "text", height = 600, width = 850)
         
         # change y-axis title position so it doesn't overlap with labels
         
-        gp2[['x']][['layout']][['annotations']][[2]][['x']] <- -0.04
+        gp2[['x']][['layout']][['annotations']][[2]][['x']] <- -0.045
         
-        # display plot, customizing mode bar
+        # display plot, customizing mode bar to drop unnecessary buttons
         
         gp2 %>% 
             config(modeBarButtonsToRemove = list("sendDataToCloud", 
@@ -204,78 +317,90 @@ server <- function(input, output) {
                                                  "pan2d"))
     })
     
-    output$year_cor_text <- renderText({
+    # de-facto subtitle for cor by team table in sidebar
+    
+    output$team_cor_text <- renderText({
+        
+        # choose text to show based on input$league selector
         
         ifelse(input$league == "nba",
-               year_cor_subtitle <- "For NBA, by season",
-               year_cor_subtitle <- "For MLB, by year")
-        year_cor_subtitle
+               team_cor_subtitle <- "For NBA, by franchise",
+               team_cor_subtitle <- "For MLB, by franchise")
+    })
+    
+    # text to describe strongest cor values from by-team table
+    
+    output$team_cor_max <- renderText({
+        
+        # choose text to show based on input$league selector
+        
+        ifelse(input$league == "nba",
+               strong_team_cor <- "Relationship strongest (> 0.55) for
+                                   Grizzlies, Bulls, Mavericks, and Cavaliers",
+               strong_team_cor <- "Relationship strongest (0.69!) for NYY;
+                                   greater than 0.5 for DET, ANA, and ATL")
+    })
+    
+    # text to describe weakest cor values from by-team table
+    
+    output$team_cor_min <- renderText({
+        
+        # choose text to show based on input$league selector
+        
+        ifelse(input$league == "nba",
+               weak_team_cor <- "Relationship weakest (NEGATIVE!) for
+                                 Pelicans/Hornets, Knicks, and Trail Blazers",
+               weak_team_cor <- "Relationship weakest (NEGATIVE!) for TOR;
+                                 less than .05 for CIN")
+    })
+    
+    # text to describe average cor values from by-team table (useful to see if
+    # a given team is above or below average)
+    
+    output$team_cor_avg <- renderText({
+        
+        # choose text to show based on input$league selector
+        
+        ifelse(input$league == "nba",
+               avg_team_cor <- "Average correlation across franchises: 0.342",
+               avg_team_cor <- "Average correlation across franchises: 0.265")
+    })
+    
+    # render the cor by team gt table for display in sidebar
+    
+    output$team_cor <- render_gt({
+        
+        # choose table to show based on input$league selector
+        
+        ifelse(input$league == "nba",
+               team_cor_table <- nba_team_cor_table,
+               team_cor_table <- mlb_team_cor_table)
+        
+        # show table
+        
+        team_cor_table
         
     })
     
-    output$year_cor_max <- renderText({
-        
-        ifelse(input$league == "nba",
-               strong_year_cor <- "Relationship strongest (> 0.55) in 1984-85, 
-                                   1999-00, and 2017-18",
-               strong_year_cor <- "Relationship strongest (> 0.55) in 1998, 
-                                   1999, and 2016")
-        strong_year_cor
-    })
+    # render plotly of payroll and wins by team
     
-    output$year_cor_min <- renderText({
-        
-        ifelse(input$league == "nba",
-               weak_year_cor <- "Relationship weakest (<= 0.1) in 1986-87,
-                                 2005-06, and 2006-07",
-               weak_year_cor <- "Relationship weakest (< 0.05) in 1987, 1990,
-                                 and 1992")
-        weak_year_cor
-        
-    })
-    
-    output$year_cor_avg <- renderText({
-        
-        ifelse(input$league == "nba",
-               avg_year_cor <- "Average correlation across years: 0.36",
-               avg_year_cor <- "Average correlation across years: 0.356")
-        avg_year_cor
-
-    })
-    
-    output$year_cor <- render_gt({
-        
-        ifelse(input$league == "nba",
-               year_cor_table <- nba_year_cor_table,
-               year_cor_table <- mlb_year_cor_table)
-        year_cor_table
-        
-    })
-
     output$by_team <- renderPlotly({
-    
-        # Choose league to plot based on input$league from ui
+        
+        # choose league to plot based on input$league selector
         
         ifelse(
             input$league == "nba",
-            
-            # If input$plot_type is "nba", plot nba data
-            
             plot3 <- nba_plot_3,
-            
-            # Otherwise, plot mlb data (would change this if added more leagues)
-            
-            plot3 <- mlb_plot_3
-        )
+            plot3 <- mlb_plot_3)
         
         # assign the plot to ggplotly so hover reveals text and specify
         # dimensions
         
-        gp3 <- ggplotly(plot3, tooltip = "text", height = 750, width = 950)
+        gp3 <- ggplotly(plot3, tooltip = "text", height = 600, width = 850)
         
         # change y-axis title position so it doesn't overlap with labels
         
-        gp3[['x']][['layout']][['annotations']][[2]][['x']] <- -0.04
+        gp3[['x']][['layout']][['annotations']][[2]][['x']] <- -0.045
         
         # display plot, customizing mode bar
         
@@ -289,54 +414,7 @@ server <- function(input, output) {
                                                  "editInChartStudio",
                                                  "zoom2d",
                                                  "pan2d"))
-        
     })
-    
-    output$team_cor_text <- renderText({
-        
-        ifelse(input$league == "nba",
-               team_cor_subtitle <- "For NBA, by franchise",
-               team_cor_subtitle <- "For MLB, by franchise")
-    })
-    
-    output$team_cor_max <- renderText({
-        
-        ifelse(input$league == "nba",
-               strong_team_cor <- "Relationship strongest (> 0.55) for
-                                   Grizzlies, Bulls, Mavericks, and Cavaliers",
-               strong_team_cor <- "Relationship strongest (0.69!) for NYY;
-                                   greater than 0.5 for DET, ANA, and ATL")
-        strong_team_cor
-    })
-    
-    output$team_cor_min <- renderText({
-        
-        ifelse(input$league == "nba",
-               weak_team_cor <- "Relationship weakest (NEGATIVE!) for
-                                 Pelicans/Hornets, Knicks, and Trail Blazers",
-               weak_team_cor <- "Relationship weakest (NEGATIVE!) for TOR;
-                                 less than .05 for CIN")
-        weak_team_cor
-        
-    })
-    
-    output$team_cor_avg <- renderText({
-        
-        ifelse(input$league == "nba",
-               avg_team_cor <- "Average correlation across franchises: 0.342",
-               avg_team_cor <- "Average correlation across franchises: 0.265")
-        avg_team_cor
-        
-    })
-    
-    output$team_cor <- render_gt({
-        
-        ifelse(input$league == "nba",
-               team_cor_table <- nba_team_cor_table,
-               team_cor_table <- mlb_team_cor_table)
-        team_cor_table
-        
-        })
 
 }
 

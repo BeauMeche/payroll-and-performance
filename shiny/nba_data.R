@@ -1,9 +1,11 @@
+# load necessary packages
+
 library(tidyverse)
 library(stringr)
 library(gt)
 library(broom)
 
-# load nba data saved in gather.Rmd
+# load nba data (saved from gather.Rmd and moved to shiny directory)
 
 load("data-files/nba.Rdata")
 
@@ -64,7 +66,7 @@ nba_year_cor_table <- nba_adjusted %>%
   cols_label(season = md("**Season**"),
              cor = md("**Correlation Coefficient**")) %>%
   cols_align(columns = "season", align = "left") %>% 
-  tab_options(container.height = 650)
+  tab_options(container.height = 450)
 
 
 # table for cor between payroll and wins by team
@@ -77,7 +79,7 @@ nba_team_cor_table <- nba_adjusted %>%
   cols_label(franchise_id = md("**Franchise**"),
              cor = md("**Correlation Coefficient**")) %>%
   cols_align(columns = "franchise_id", align = "left") %>% 
-  tab_options(container.height = 750)
+  tab_options(container.height = 450)
 
 
 

@@ -1,13 +1,14 @@
+# loading necessary packages
+
 library(tidyverse)
 library(stringr)
 library(gt)
 library(broom)
 
-###### MLB DATA ######
-
-# load mlb data saved in gather.Rmd
+# load mlb data (saved from gather.Rmd and moved to shiny directory)
 
 load("data-files/mlb.Rdata")
+
 
 ###### PLOT TIME
 
@@ -30,6 +31,7 @@ mlb_plot_2 <- mlb_adjusted %>%
   ggplot(aes(payroll_adjusted / 1000000, rs_win_pct)) +
   geom_point(aes(text = name)) +
   facet_wrap(~year, scales = "free_x") +
+  scale_y_continuous(breaks = seq(.3, .7, .2)) +
   labs(x = "Payroll (in millions of USD, adjusted)",
        y = "Regular Season Win Percentage") +
   theme_classic() +
@@ -43,6 +45,7 @@ mlb_plot_3 <- mlb_adjusted %>%
   ggplot(aes(payroll_rank, rs_win_pct, text = year)) +
   geom_point() +
   facet_wrap(~ franchise_id, scales = "free_x") +
+  scale_y_continuous(breaks = seq(.3, .7, .2)) +
   labs(x = "Payroll Rank",
        y = "Regular Season Win Percentage") +
   theme_classic() +
@@ -64,7 +67,8 @@ mlb_year_cor_table <- mlb_adjusted %>%
   cols_label(year = md("**Year**"),
              cor = md("**Correlation Coefficient**")) %>%
   cols_align(columns = "year", align = "left") %>% 
-  tab_options(container.height = 650)
+  tab_options(container.height = 450)
+
 
 # table for cor between payroll rank and wins by team
 
@@ -76,5 +80,5 @@ mlb_team_cor_table <- mlb_adjusted %>%
   cols_label(franchise_id = md("**Franchise**"),
              cor = md("**Correlation Coefficient**")) %>%
   cols_align(columns = "franchise_id", align = "left") %>% 
-  tab_options(container.height = 750)
+  tab_options(container.height = 450)
 
