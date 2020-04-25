@@ -3,6 +3,7 @@ library(janitor)
 library(rvest)
 library(stringr)
 library(magrittr)
+library(gt)
 
 ###### MLB DATA ######
 
