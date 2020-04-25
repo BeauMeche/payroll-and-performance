@@ -70,3 +70,7 @@ wkcook@college.harvard.edu and find me on "
 p8_link <- "https://github.com/westleycook"
 
 p8a <- "."
+
+p9 <- "The repo for this project can be found "
+
+p9_link <- "https://github.com/westleycook/payroll-and-performance"

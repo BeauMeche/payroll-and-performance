@@ -257,7 +257,10 @@ ui <- navbarPage(
              h3("About Me"),
              p(p8, a(href = p8_link, "GitHub",
                      .noWS = "outside", target = "_blank"),
-               p8a)
+               p8a),
+             p(p9, a(href = p9_link, "here",
+                     .noWS = "outside", target = "_blank"),
+               ".")
              )
     )
 
