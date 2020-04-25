@@ -1,13 +1,12 @@
 library(tidyverse)
-library(janitor)
-library(rvest)
 library(stringr)
-library(magrittr)
 library(gt)
+library(broom)
 
 # load nba data saved in gather.Rmd
 
 load("data-files/nba.Rdata")
+
 
 ###### PLOTS
 
@@ -23,6 +22,7 @@ nba_plot_1 <- nba_adjusted %>%
   scale_x_continuous(breaks = seq(1985, 2015, 5)) +
   geom_smooth(method = "gam", se = FALSE, color = "gray")
 
+
 # plotting wins and payroll by season
 
 nba_plot_2 <- nba_adjusted %>% 
@@ -36,9 +36,6 @@ nba_plot_2 <- nba_adjusted %>%
         axis.title.y = element_text(vjust = 1)) +
   geom_smooth(method = "lm", se = FALSE, na.rm = TRUE)
 
-nba_plot_2
-
-ggplotly(nba_plot_2, tooltip = "text")
 
 # plotting wins and payroll_rank by team
 
@@ -51,8 +48,6 @@ nba_plot_3 <- nba_adjusted %>%
   theme_classic() +
   theme(axis.title = element_text(face = "bold")) +
   geom_smooth(method = "lm", se = FALSE)
-
-nba_plot_3
 
 
 
@@ -70,6 +65,7 @@ nba_year_cor_table <- nba_adjusted %>%
              cor = md("**Correlation Coefficient**")) %>%
   cols_align(columns = "season", align = "left") %>% 
   tab_options(container.height = 650)
+
 
 # table for cor between payroll and wins by team
 
@@ -116,6 +112,7 @@ nba_mod_team_tidy_effect <- nba_mod_team_tidy %>%
                         conf.high + filter(., term == "payroll_rank") %>% 
                           pull(estimate)))
 
+
 # mutate to clean names for plot display, then plot
 
 g <- nba_mod_team_tidy_effect %>% 
@@ -137,7 +134,5 @@ on Regular Season Win Percentage",
        x = "",
        y = "Effect of 1 means a 1 point increase in win percentage
 Error bars show 95% confidence interval")
-
-ggplotly(g, tooltip = "text")
   
 

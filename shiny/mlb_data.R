@@ -1,9 +1,7 @@
 library(tidyverse)
-library(janitor)
-library(rvest)
 library(stringr)
-library(magrittr)
 library(gt)
+library(broom)
 
 ###### MLB DATA ######
 
@@ -37,8 +35,6 @@ mlb_plot_2 <- mlb_adjusted %>%
   theme(axis.title = element_text(face = "bold", vjust = 0)) +
   geom_smooth(method = "lm", se = FALSE)
 
-mlb_plot_2
-
 # payroll_rank and rs_win_pct by team
 
 mlb_plot_3 <- mlb_adjusted %>% 
@@ -51,7 +47,8 @@ mlb_plot_3 <- mlb_adjusted %>%
   theme(axis.title = element_text(face = "bold", vjust = 0)) +
   geom_smooth(method = "lm", se = FALSE)
 
-mlb_plot_3
+
+
 
 ###### TABLES
 
