@@ -153,8 +153,8 @@ ui <- navbarPage(
     
     # model panel, to talk more about model and regression results
     
-    tabPanel("Models",
-             titlePanel("Modeling the Data as Linear"),
+    tabPanel("Model",
+             titlePanel("Payroll and Wins: A Linear Model"),
              sidebarLayout(
                  sidebarPanel(
                      h4(strong("Select a League")),
@@ -169,9 +169,9 @@ ui <- navbarPage(
                      p("Roughly half of the teams' confidence intervals are
                        above zero, indicating that they have a definite positive 
                        association between payroll rank and win percentage"),
-                     p("The Knicks and Pelicans ought to consider new 
-                       management: their spending does not appear to be working 
-                       very well"),
+                     p("The Knicks and Pelicans have not historically been
+                       smart spenders; they actually tend to lose more when 
+                       spending more"),
                      h4("MLB"),
                      p("The New York Yankees have far and away the largest 
                        effect of payroll rank on win percentage; for all but a 
@@ -183,7 +183,7 @@ ui <- navbarPage(
                      h3(strong("Payroll's Effect on Win Percentage by Team")),
                      h4("Effect of Moving One Spot Up in Payroll Rank"),
                      p("Effect of 1 means an assosicated 1 point increase in win
-                       percentage (on average)."),
+                       percentage (on average)"),
                      p("Bars show 95% confidence interval"),
                      plotlyOutput("team_effect")
                  )
@@ -209,7 +209,7 @@ ui <- navbarPage(
                      h3(strong("Payroll's Effect on Win Percentage by Season")),
                      h4("Effect of Spending Additional $1 Million"),
                      p("Effect of 1 means an assosicated 1 point increase in win
-                       percentage (on average)."),
+                       percentage (on average)"),
                      p("Bars show 95% confidence interval"),
                      plotlyOutput("year_effect")
                  )
