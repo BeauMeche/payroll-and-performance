@@ -8,7 +8,7 @@ library(magrittr)
 
 # load mlb data saved in gather.Rmd
 
-load("mlb.Rdata")
+load("data-files/mlb.Rdata")
 
 ###### PLOT TIME
 

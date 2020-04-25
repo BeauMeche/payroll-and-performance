@@ -7,7 +7,7 @@ library(gt)
 
 # load nba data saved in gather.Rmd
 
-load("nba.Rdata")
+load("data-files/nba.Rdata")
 
 ###### PLOTS
 
