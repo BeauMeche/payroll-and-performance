@@ -44,6 +44,8 @@ ui <- navbarPage(
                          p("A control bar at the top of each plot offers 
                             additional options such as zoom, autoscale,
                             downloading as png, and resetting to the default."),
+                         p("If the plot to the right showing payroll over time
+                            doesn't size properly, simply reload the page."),
                          p(strong("I recommend clicking autoscale on the larger
                                   plots."))
                      ),
