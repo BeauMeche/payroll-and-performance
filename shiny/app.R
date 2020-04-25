@@ -62,6 +62,10 @@ ui <- navbarPage(
                      )
                  ),
                  
+                 # give a bit of white space between panels
+                 
+                 br(),
+                 
                  # sidebar to hold table of correlation coefficients by year
                  # all text except title customized by league
                  
@@ -92,14 +96,17 @@ ui <- navbarPage(
                          h4("Does the relationship between payroll and win
                             percentage vary by year? Clearly, the answer is 
                             yes."),
-                         plotlyOutput("by_year")
+                         plotlyOutput("by_year"),
+                         
+                         # set height so next sidebar doesn't overlap with plot
+                         # in mobile view/small windows
+                         
+                         div(style = "height:200px"),
                     )
                  ),
                  
-                 # breaks to prevent plots (which have specified height/width)
-                 # from overlapping
+                 # give a bit of white space between panels
                  
-                 br(),
                  br(),
                  
                  # sidebar to hold table of correlation coefficients by team
@@ -147,12 +154,15 @@ ui <- navbarPage(
     # model panel, to talk more about model and regression results
     
     tabPanel("Models",
-             titlePanel("Modeling the Data"),
+             titlePanel("Modeling the Data as Linear"),
              sidebarLayout(
                  sidebarPanel(
                      h4(strong("Select a League")),
+                     p("Note: the effects documented on this page are not
+                       necessarily causal; rather, they represent the average
+                       effect on win percentage associated with payroll"),
                      selectInput("league_2",
-                                 "",
+                                 "League",
                                  c("NBA" = "nba", "MLB" = "mlb")),
                      h4(strong("Observations:")),
                      h4("NBA"),
@@ -172,8 +182,9 @@ ui <- navbarPage(
                  mainPanel(
                      h3(strong("Payroll's Effect on Win Percentage by Team")),
                      h4("Effect of Moving One Spot Up in Payroll Rank"),
-                     p("Effect of 1 means a 1 point increase in win percentage.
-                       Bars show 95% confidence interval"),
+                     p("Effect of 1 means an assosicated 1 point increase in win
+                       percentage (on average)."),
+                     p("Bars show 95% confidence interval"),
                      plotlyOutput("team_effect")
                  )
              ),
@@ -188,37 +199,63 @@ ui <- navbarPage(
                        the seasons, we can't be sure an additional $1 million on
                        payroll had any effect at all on win percentage"),
                      h4("MLB"),
-                     p("With the exception of 1985 (is there an error here?) 
-                       there seems to be no real effect of payroll on win 
-                       percentage regardless of season - and even the 1985 
-                       effect is small ($1 million additional payroll brings 
-                       less than .5 point increase in win percentage)")
+                     p("With the exception of 1985, there seems to be no real 
+                        effect of payroll on win percentage regardless of season
+                        - and even the 1985 effect is small ($1 million 
+                        additional payroll is associated, on average, with less 
+                       than a .5 point increase in win percentage)")
                  ),
                  mainPanel(
                      h3(strong("Payroll's Effect on Win Percentage by Season")),
                      h4("Effect of Spending Additional $1 Million"),
-                     p("Effect of 1 means a 1 point increase in win percentage.
-                       Bars show 95% confidence interval"),
+                     p("Effect of 1 means an assosicated 1 point increase in win
+                       percentage (on average)."),
+                     p("Bars show 95% confidence interval"),
                      plotlyOutput("year_effect")
                  )
              )
     ),
     
-    # about panel, to explain the project and do some shameless PR
+    # about panel, to explain the project and do some shameless PR. All text is
+    # assigned to objects in about_page_text.R
     
     tabPanel("About", 
              titlePanel("About the Project"),
-             h3("Definitional Notes"),
              p(p1),
+             h3("Definitional Notes"),
              p(p2),
-             p(p3),
              h3("More to Come?"),
+             p(p3),
              p(p4),
-             h3("Acknowledgements"),
              p(p5),
-             p(p6),
+             h3("Acknowledgements"),
+             
+             # gets a little messy creating hyperlinks
+             
+             p(p6, a(href = p6_link_1, "here",
+                     .noWS = "outside", target = "_blank"),
+               p6a, a(href = p6_link_2, "here",
+                      .noWS = "outside", target = "_blank"),
+               p6b, a(href = p6_link_3, "here",
+                      .noWS = "outside", target = "_blank"),
+               p6c),
+             
+             # same thing here
+             
+             p(p7, a(href = p7_link_1, "here",
+                     .noWS = "outside", target = "_blank"),
+               p7a, a(href = p7_link_2, "here",
+                      .noWS = "outside", target = "_blank"),
+               p7b, a(href = p7_link_3, "here",
+                      .noWS = "outside", target = "_blank"),
+               p7c),
+             
+             # and here
+             
              h3("About Me"),
-             p(p7)
+             p(p8, a(href = p8_link, "GitHub",
+                     .noWS = "outside", target = "_blank"),
+               p8a)
              )
     )
 

@@ -6,42 +6,67 @@ between a team's payroll and their level of success in the league."
 
 p2 <- "Payroll is tremendously complex in professional sports because of things 
 like deferred payments (when athletes are paid for current work at future 
-dates); I simplified it here by treating it as the total amount that a team 
+dates). I simplified it here by treating it as the total amount that a team 
 spent on its current players' salaries in a given year."
 
-p3 <- '"Success" is examined here in a few different ways: by total wins in the 
-regular season, and by metrics of post-season success (such as making the 
-playoffs or winning a championship). My data shows that payroll correlates more 
-closely with playoff appearances and regular season standings than it does with 
-championships, indicating that teams can "buy" a certain level of success by 
-paying a lot to talented players, but that it will not necessarily win them a 
-championship.'
+p3 <- '"Success" is examined here only by total wins in the regular season. It
+would be interesting to also look at success as measured by metrics of 
+post-season performance (such as making the playoffs or winning a championship).
+My data shows that payroll correlates with regular season win percentage, but 
+will that hold true for playoof success as well? My hypothesis is that teams can
+"buy" a certain level of regular season success by paying a lot to talented 
+players, but that it does not necessarily win them a championship.'
 
-p4 <- "In the future, it would be interesting to add analysis of NFL, NHL, or 
-MLS data - but for now, I'm working only with data from the MLB and NBA because 
-their payroll data was publicly available and easy to access. It would also be 
-interesting to look more closely into cases where teams changed 
-ownership/management or location, and see if that had a significant impact on 
-payroll or success, but time constraints have precluded this option for now."
+p4 <- "In the future, it would also be interesting to add analysis of NFL, NHL,
+or MLS data - but for now, I'm limited to data from the MLB and NBA because 
+their payroll data was publicly available and easy to access."
 
-p5 <- "Major thanks to Sean Lahman and the folks at Baseball Reference, who 
-compiled and made available the data used in this project. See 
-http://www.seanlahman.com/baseball-archive/statistics/ for the data I obtained 
-from Sean, https://www.baseball-reference.com/leagues/MLB/ for the data scraped 
-from Baseball Reference, and 
-https://github.com/westleycook/payroll-and-performance/blob/master/gather.Rmd 
-for my scraping code."
+p5 <- "It would also be interesting to look more closely into cases where teams 
+changed ownership/management or location, and see if that had a significant 
+impact on payroll or success, but time constraints have precluded this option 
+for now."
 
-p6 <- "Additional thanks goes out to Chris Davis, who compiled and made 
+# several chunks for the same paragraph here in order to create hyperlinks
+
+p6 <- "Major thanks to Sean Lahman and the folks at Baseball Reference, who 
+compiled and made available the MLB data used in this project. See "
+
+p6_link_1 <- "http://www.seanlahman.com/baseball-archive/statistics/"
+
+p6a <- " for the data I obtained from Sean, "
+
+p6_link_2 <- "https://www.baseball-reference.com/leagues/MLB/"
+
+p6b <- " for the data I scraped from Baseball Reference, and "
+
+p6_link_3 <- "https://github.com/westleycook/payroll-and-performance/blob/master
+/gather.Rmd"
+
+p6c <- " for my scraping code."
+
+# several chunks for the same paragraph here too, in order to create hyperlinks
+
+p7 <- "Additional thanks goes out to Chris Davis, who compiled and made 
 available the NBA payroll data used in this project, and to the folks at Land of
-Basketball who compiled the team performance data I used. See 
-https://data.world/datadavis/nba-salaries for salary data from Chris, 
-https://www.landofbasketball.com/nba_teams_year_by_year.htm for team performance
-data, and 
-https://github.com/westleycook/payroll-and-performance/blob/master/gather.Rmd 
-for my scraping code."
+Basketball who compiled the NBA team performance data I used. See "
 
-p7 <- "My name is Westley Cook and I'm a Harvard senior majoring in East Asian 
+p7_link_1 <- "https://data.world/datadavis/nba-salaries"
+
+p7a <- " for salary data from Chris, "
+
+p7_link_2 <- "https://www.landofbasketball.com/nba_teams_year_by_year.htm"
+
+p7b <- " for team performance data, and "
+
+p7_link_3 <- "https://github.com/westleycook/payroll-and-performance/blob/master
+/gather.Rmd"
+
+p7c <- " for my scraping code."
+
+p8 <- "My name is Westley Cook and I'm a Harvard senior majoring in East Asian 
 Studies with a secondary in Government. You can reach me at 
-wkcook@college.harvard.edu and find me on GitHub at 
-https://github.com/westleycook."
+wkcook@college.harvard.edu and find me on "
+
+p8_link <- "https://github.com/westleycook"
+
+p8a <- "."
