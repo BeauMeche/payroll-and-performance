@@ -9,6 +9,10 @@ library(plotly)
 source("mlb_data.R")
 source("nba_data.R")
 
+# load text for about page
+
+source("about_page_text.R")
+
 # create UI
 
 ui <- navbarPage(
@@ -162,14 +166,18 @@ ui <- navbarPage(
     # about panel, to explain the project and do some shameless PR
     
     tabPanel("About", 
-             titlePanel("About"),
-             h3("Project Background and Goals"),
-             p("This is where I talk about my project.
-               More content forthcoming."),
+             titlePanel("About the Project"),
+             h3("Definitional Notes"),
+             p(p1),
+             p(p2),
+             p(p3),
+             h3("More to Come?"),
+             p(p4),
+             h3("Acknowledgements"),
+             p(p5),
+             p(p6),
              h3("About Me"),
-             p("My name is Westley Cook and I major in East Asian Studies
-             with a secondary in Government. 
-             You can reach me at wkcook@college.harvard.edu.")))
+             p(p7)))
 
 
 
