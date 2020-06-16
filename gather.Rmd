@@ -596,7 +596,7 @@ wt7 <- pull_nhl_payroll(28, "Atlanta", "Thrashers") # now Winnipeg Jets
 
 wt8 <- pull_nhl_payroll(29, "Anaheim", "Ducks")
 
-wt9 <- pull_nhl_payroll(30, "Arizona", "Coyotes")
+wt9 <- pull_nhl_payroll(30, "Phoenix", "Coyotes")
 
 wt10 <- pull_nhl_payroll(31, "Calgary", "Flames")
 
@@ -624,8 +624,7 @@ nhl_east_payroll <- bind_rows(t1,
                       t12,
                       t13,
                       t14,
-                      t15) %>% 
-  mutate(conference = "East")
+                      t15)
 
 nhl_west_payroll <- bind_rows(wt1,
                       wt2,
@@ -641,8 +640,7 @@ nhl_west_payroll <- bind_rows(wt1,
                       wt12,
                       wt13,
                       wt14,
-                      wt15) %>% 
-  mutate(conference = "West")
+                      wt15)
 
 nhl_payroll <- bind_rows(nhl_east_payroll,
                          nhl_west_payroll)
@@ -831,7 +829,17 @@ nhl_performance <- bind_rows(ducks,
                              capitals,
                              thrashers)
 
-nhl_performance
+
+
+nhl_adjusted <- full_join(nhl_performance, nhl_payroll,
+                          by = c("team", "season")) %>% 
+  filter(!is.na(payroll_adjusted))
+
+nhl_adjusted %>% 
+  ggplot(aes(payroll_adjusted, pts)) +
+  geom_point(aes(color = playoffs)) +
+  geom_smooth(method = "lm") +
+  facet_wrap(~ season, scales = "free")
 
 ```
 
