@@ -647,10 +647,191 @@ nhl_west_payroll <- bind_rows(wt1,
 nhl_payroll <- bind_rows(nhl_east_payroll,
                          nhl_west_payroll)
 
-nhl_payroll
-# note: scraping the rest of this data is going to be a huge pain in the neck
+nhl_payroll %<>% 
+  mutate(season = year,
+         year = as.numeric(substr(year, 0, 4)) + 1,
+         payroll_adjusted = map2_dbl(year, payroll, ~ inflation_calc(.x, .y)))
 
-# see nhl.com for standings by season
+
+
+
+
+
+# standings data by team
+
+pull_nhl_standings <- function(url){
+ read_html(url) %>% 
+  html_nodes(css = "table") %>% 
+  html_table() %>% 
+  as.data.frame() %>% 
+  clean_names() %>% 
+  select(everything(), -lg, -srs, -sos, -finish, -coaches) %>% 
+  mutate(performance = playoffs,
+         playoffs = ifelse(endsWith(team, "*"),
+                           "yes",
+                           "no"),
+         team = ifelse(endsWith(team, "*"), 
+                       str_remove(team, "\\*"),
+                       team)) 
+}
+
+# team name changed from Mighty Ducks of Anaheim to Anaheim Ducks in 2006-07,
+# but I'm ignoring that
+
+ducks <- pull_nhl_standings(
+  "https://www.hockey-reference.com/teams/ANA/history.html") %>% 
+  mutate(team = rep("Anaheim Ducks", nrow(.)))
+
+coyotes <- pull_nhl_standings(
+  "https://www.hockey-reference.com/teams/PHX/history.html"
+)
+
+bruins <- pull_nhl_standings(
+  "https://www.hockey-reference.com/teams/BOS/history.html"
+)
+
+sabres <- pull_nhl_standings(
+  "https://www.hockey-reference.com/teams/BUF/history.html"
+)
+
+flames <- pull_nhl_standings(
+  "https://www.hockey-reference.com/teams/CGY/history.html"
+)
+
+hurricanes <- pull_nhl_standings(
+  "https://www.hockey-reference.com/teams/CAR/history.html"
+)
+
+blackhawks <- pull_nhl_standings(
+  "https://www.hockey-reference.com/teams/CHI/history.html"
+)
+
+avalanche <- pull_nhl_standings(
+  "https://www.hockey-reference.com/teams/COL/history.html"
+)
+
+blue_jackets <- pull_nhl_standings(
+  "https://www.hockey-reference.com/teams/CBJ/history.html"
+)
+
+stars <- pull_nhl_standings(
+  "https://www.hockey-reference.com/teams/DAL/history.html"
+)
+
+red_wings <- pull_nhl_standings(
+  "https://www.hockey-reference.com/teams/DET/history.html"
+)
+
+oilers <- pull_nhl_standings(
+  "https://www.hockey-reference.com/teams/EDM/history.html"
+)
+
+panthers <- pull_nhl_standings(
+  "https://www.hockey-reference.com/teams/FLA/history.html"
+)
+
+kings <- pull_nhl_standings(
+  "https://www.hockey-reference.com/teams/LAK/history.html"
+)
+
+wild <- pull_nhl_standings(
+  "https://www.hockey-reference.com/teams/MIN/history.html"
+)
+
+canadiens <- pull_nhl_standings(
+  "https://www.hockey-reference.com/teams/MTL/history.html"
+)
+
+predators <- pull_nhl_standings(
+  "https://www.hockey-reference.com/teams/NSH/history.html"
+)
+
+devils <- pull_nhl_standings(
+  "https://www.hockey-reference.com/teams/NJD/history.html"
+)
+
+islanders <- pull_nhl_standings(
+  "https://www.hockey-reference.com/teams/NYI/history.html"
+)
+
+rangers <- pull_nhl_standings(
+  "https://www.hockey-reference.com/teams/NYR/history.html"
+)
+
+senators <- pull_nhl_standings(
+  "https://www.hockey-reference.com/teams/OTT/history.html"
+)
+
+flyers <- pull_nhl_standings(
+  "https://www.hockey-reference.com/teams/PHI/history.html"
+)
+
+penguins <- pull_nhl_standings(
+  "https://www.hockey-reference.com/teams/PIT/history.html"
+)
+
+sharks <- pull_nhl_standings(
+  "https://www.hockey-reference.com/teams/SJS/history.html"
+)
+
+blues <- pull_nhl_standings(
+  "https://www.hockey-reference.com/teams/STL/history.html"
+)
+
+lightning <- pull_nhl_standings(
+  "https://www.hockey-reference.com/teams/TBL/history.html"
+)
+
+maple_leafs <- pull_nhl_standings(
+  "https://www.hockey-reference.com/teams/TOR/history.html"
+)
+
+canucks <- pull_nhl_standings(
+  "https://www.hockey-reference.com/teams/VAN/history.html"
+)
+
+capitals <- pull_nhl_standings(
+  "https://www.hockey-reference.com/teams/WSH/history.html"
+)
+
+thrashers <- pull_nhl_standings(
+  "https://www.hockey-reference.com/teams/WPG/history.html"
+)
+
+
+
+nhl_performance <- bind_rows(ducks,
+                             coyotes,
+                             bruins,
+                             sabres,
+                             flames,
+                             hurricanes,
+                             blackhawks,
+                             avalanche,
+                             blue_jackets,
+                             stars,
+                             red_wings,
+                             oilers,
+                             panthers,
+                             kings,
+                             wild,
+                             canadiens,
+                             predators,
+                             devils,
+                             islanders,
+                             rangers,
+                             senators,
+                             flyers,
+                             penguins,
+                             sharks,
+                             blues,
+                             lightning,
+                             maple_leafs,
+                             canucks,
+                             capitals,
+                             thrashers)
+
+nhl_performance
 
 ```
 
@@ -691,6 +872,8 @@ nba_adjusted <- nba_full %>%
                                      ~ inflation_calc(.x, .y))) %>% 
   group_by(season) %>% 
   mutate(payroll_rank = rank(payroll))
+
+nba_adjusted
 
 # NOTE: missing payroll data for
 # 1986-87 Trail Blazers
