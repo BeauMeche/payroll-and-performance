@@ -493,6 +493,33 @@ nba_full <- nba_team_performance %>%
 
 ```
 
+```{r gather-nhl-data}
+
+# note: 2004-05 season missing due to lockout (no season)
+
+read_html("https://en.wikipedia.org/wiki/List_of_team_payrolls_in_the_NHL") %>% 
+  html_nodes(css = "table") %>% 
+  html_table(fill = TRUE) %>% 
+  .[3] %>% 
+  as.data.frame() %>% 
+  clean_names() %>% 
+  rename(payroll = average_team_payroll) %>% 
+  select(year, payroll) %>% 
+  mutate(team = rep("Carolina Hurricanes", nrow(.)),
+         payroll = str_remove_all(payroll, "[$,]"),
+         payroll = gsub("\\[.*", "", payroll),
+         payroll = as.numeric(payroll),
+         year = paste(substr(year, 0, 4), substr(year, 6, 7), sep = "-"),
+         year = ifelse(year == "1999-20",
+                       "1999-00",
+                       year))
+
+# note: scraping the rest of this data is going to be a huge pain in the neck
+
+?as.numeric
+
+```
+
 ```{r adjust-for-inflation, echo=FALSE}
 
 # loading in tibble with CPI values to use in adjusting for inflation
