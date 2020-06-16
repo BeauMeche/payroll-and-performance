@@ -500,12 +500,14 @@ nba_full <- nba_team_performance %>%
 read_html("https://en.wikipedia.org/wiki/List_of_team_payrolls_in_the_NHL") %>% 
   html_nodes(css = "table") %>% 
   html_table(fill = TRUE) %>% 
-  .[3] %>% 
+  .[5] %>% 
   as.data.frame() %>% 
-  clean_names() %>% 
-  rename(payroll = average_team_payroll) %>% 
+  clean_names()  %>% 
+  rename(payroll = team_payroll) %>% 
   select(year, payroll) %>% 
-  mutate(team = rep("Carolina Hurricanes", nrow(.)),
+  mutate(location = rep("Carolina", nrow(.)),
+         mascot = rep("Hurricanes", nrow(.)),
+         team = paste(location, mascot, sep = " "),
          payroll = str_remove_all(payroll, "[$,]"),
          payroll = gsub("\\[.*", "", payroll),
          payroll = as.numeric(payroll),
@@ -514,9 +516,141 @@ read_html("https://en.wikipedia.org/wiki/List_of_team_payrolls_in_the_NHL") %>%
                        "1999-00",
                        year))
 
+pull_nhl_payroll <- function(table_number, location, mascot){
+  read_html(
+    "https://en.wikipedia.org/wiki/List_of_team_payrolls_in_the_NHL") %>% 
+  html_nodes(css = "table") %>% 
+  html_table(fill = TRUE) %>% 
+  .[table_number] %>% 
+  as.data.frame() %>% 
+  clean_names() %>% 
+  rename(payroll = team_payroll) %>% 
+  select(year, payroll) %>% 
+  mutate(location = rep(location, nrow(.)),
+         mascot = rep(mascot, nrow(.)),
+         team = paste(location, mascot, sep = " "),
+         payroll = str_remove_all(payroll, "[$,]"),
+         payroll = gsub("\\[.*", "", payroll),
+         payroll = as.numeric(payroll),
+         year = paste(substr(year, 0, 4), substr(year, 6, 7), sep = "-"),
+         year = ifelse(year == "1999-20",
+                       "1999-00",
+                       year))
+}
+
+# Eastern Conference, Metropolitan Division
+
+t1 <- pull_nhl_payroll(5, "Carolina", "Hurricanes")
+
+# note: Columbus was in Western Conference from 2000-01 to 2012-13
+
+wt15 <- pull_nhl_payroll(6, "Columbus", "Blue Jackets")
+
+t2 <- pull_nhl_payroll(7, "New Jersey", "Devils")
+
+t3 <- pull_nhl_payroll(8, "New York", "Islanders")
+
+t4 <- pull_nhl_payroll(9, "New York", "Rangers")
+
+t5 <- pull_nhl_payroll(10, "Philadelphia", "Flyers")
+
+t6 <- pull_nhl_payroll(11, "Pittsburgh", "Penguins")
+
+t7 <- pull_nhl_payroll(12, "Washington", "Capitals")
+
+# Eastern Conference, Atlantic Division
+
+t8 <- pull_nhl_payroll(13, "Boston", "Bruins")
+
+t9 <- pull_nhl_payroll(14, "Buffalo", "Sabres")
+
+t10 <- pull_nhl_payroll(15, "Detroit", "Red Wings")
+
+t11 <- pull_nhl_payroll(16, "Florida", "Panthers")
+
+t12 <- pull_nhl_payroll(17, "Montreal", "Canadiens")
+
+t13 <- pull_nhl_payroll(18, "Ottawa", "Senators")
+
+t14 <- pull_nhl_payroll(19, "Tampa Bay", "Lightning")
+
+t15 <- pull_nhl_payroll(20, "Toronto", "Maple Leafs")
+
+# Western Conference, Central Division
+
+wt1 <- pull_nhl_payroll(22, "Chicago", "Blackhawks")
+
+wt2 <- pull_nhl_payroll(23, "Colorado", "Avalanche")
+
+wt3 <- pull_nhl_payroll(24, "Dallas", "Stars")
+
+wt4 <- pull_nhl_payroll(25, "Minnesota", "Wild")
+
+wt5 <- pull_nhl_payroll(26, "Nashville", "Predators")
+
+wt6 <- pull_nhl_payroll(27, "St. Louis", "Blues")
+
+wt7 <- pull_nhl_payroll(28, "Atlanta", "Thrashers") # now Winnipeg Jets
+
+# Western Conference, Pacific Division
+
+wt8 <- pull_nhl_payroll(29, "Anaheim", "Ducks")
+
+wt9 <- pull_nhl_payroll(30, "Arizona", "Coyotes")
+
+wt10 <- pull_nhl_payroll(31, "Calgary", "Flames")
+
+wt11 <- pull_nhl_payroll(32, "Edmonton", "Oilers")
+
+wt12 <- pull_nhl_payroll(33, "Los Angeles", "Kings")
+
+wt13 <- pull_nhl_payroll(34, "San Jose", "Sharks")
+
+wt14 <- pull_nhl_payroll(35, "Vancouver", "Canucks")
+
+# Vegas Golden Knights are a team, but only have payroll data starting in 2017
+
+nhl_east_payroll <- bind_rows(t1,
+                      t2,
+                      t3,
+                      t4,
+                      t5,
+                      t6,
+                      t7,
+                      t8,
+                      t9,
+                      t10,
+                      t11,
+                      t12,
+                      t13,
+                      t14,
+                      t15) %>% 
+  mutate(conference = "East")
+
+nhl_west_payroll <- bind_rows(wt1,
+                      wt2,
+                      wt3,
+                      wt4,
+                      wt5,
+                      wt6,
+                      wt7,
+                      wt8,
+                      wt9,
+                      wt10,
+                      wt11,
+                      wt12,
+                      wt13,
+                      wt14,
+                      wt15) %>% 
+  mutate(conference = "West")
+
+nhl_payroll <- bind_rows(nhl_east_payroll,
+                         nhl_west_payroll)
+
+nhl_payroll
 # note: scraping the rest of this data is going to be a huge pain in the neck
 
-?as.numeric
+# see nhl.com for standings by season
 
 ```
 
