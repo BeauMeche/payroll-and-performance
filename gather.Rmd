@@ -17,6 +17,8 @@ library(gridExtra)
 library(blscrapeR)
 library(gt)
 library(broom)
+library(rJava)
+library(tabulizer)
 
 ```
 
@@ -493,7 +495,61 @@ nba_full <- nba_team_performance %>%
 
 ```
 
-```{r nhl-data}
+```{r adjust-for-inflation, echo=FALSE}
+
+# loading in tibble with CPI values to use in adjusting for inflation
+
+i2020 <- inflation_adjust(2020)
+
+# function to calculate dollar amount from some past year to 2020 dollars
+
+inflation_calc <- function(then_year, amount){
+  then_cpi <- i2020 %>% 
+    filter(year == then_year) %>% 
+    pull(avg_cpi)
+  now_cpi <- i2020 %>% 
+    filter(year == 2020) %>% 
+    pull(avg_cpi)
+  
+  amount * now_cpi / then_cpi
+}
+
+# adjust mlb data for inflation, adding one column with inflation adjustments
+# for each year and another column with payroll rank for each year (how much a
+# team spent relative to other teams, 1 is lowest and 30 is highest)
+
+mlb_adjusted <- mlb_full %>% 
+  mutate(
+    payroll_adjusted = map2_dbl(year, payroll, ~ inflation_calc(.x, .y))) %>% 
+  rename(franchise_id = franch_id) %>% 
+  group_by(year) %>% 
+  mutate(payroll_rank = rank(payroll))
+
+# adjust nba data for inflation using the same process
+
+nba_adjusted <- nba_full %>% 
+  mutate(payroll_adjusted = map2_dbl(year, payroll,
+                                     ~ inflation_calc(.x, .y))) %>% 
+  group_by(season) %>% 
+  mutate(payroll_rank = rank(payroll))
+
+nba_adjusted
+
+# NOTE: missing payroll data for
+# 1986-87 Trail Blazers
+# 1986-87 Bucks
+# 1986-87 Clippers
+# 1986-87 Kings
+# 1986-87 Lakers
+# 1986-87 SuperSonics
+# 1986-87 Warriors
+# 1989-90 Magic
+# 1989-90 Pacers
+# 1989-90 Timberwolves
+
+```
+
+```{r nhl-data, echo=FALSE}
 
 # note: 2004-05 season missing due to lockout
 
@@ -639,10 +695,6 @@ nhl_payroll %<>%
   mutate(season = year,
          year = as.numeric(substr(year, 0, 4)) + 1,
          payroll_adjusted = map2_dbl(year, payroll, ~ inflation_calc(.x, .y)))
-
-
-
-
 
 
 # creating function to pull standings data by team from hockey-reference.com and
@@ -831,65 +883,195 @@ nhl_adjusted <- full_join(nhl_performance, nhl_payroll,
 
 ```
 
-```{r adjust-for-inflation, echo=FALSE}
+```{r mls-data, echo=FALSE}
 
-# loading in tibble with CPI values to use in adjusting for inflation
+#creating function to pull and tidy mls payroll data from PDF tables compiled by
+#MLSPA which list every player's salary year-by-year
 
-i2020 <- inflation_adjust(2020)
-
-# function to calculate dollar amount from some past year to 2020 dollars
-
-inflation_calc <- function(then_year, amount){
-  then_cpi <- i2020 %>% 
-    filter(year == then_year) %>% 
-    pull(avg_cpi)
-  now_cpi <- i2020 %>% 
-    filter(year == 2020) %>% 
-    pull(avg_cpi)
-  
-  amount * now_cpi / then_cpi
+pull_mls_payroll <- function(year, url){
+  out <- extract_tables(url)
+  do.call(rbind, out) %>% 
+    as.data.frame() %>% 
+    row_to_names(2) %>% 
+    clean_names() %>% 
+    filter(club != "Club",
+           base_salary != year) %>% 
+    mutate(year = year,
+           club = as.character(club),
+           last_name = as.character(last_name),
+           first_name = as.character(first_name),
+           pos = as.character(pos),
+           base_salary = gsub(" ", "", base_salary),
+           base_salary = as.numeric(str_remove_all(base_salary, ",")),
+           compensation = str_remove_all(compensation, ","),
+           compensation = as.numeric(str_remove_all(compensation, "\\$"))) %>% 
+    select(year, everything(), -x)
 }
 
-# adjust mlb data for inflation, adding one column with inflation adjustments
-# for each year and another column with payroll rank for each year (how much a
-# team spent relative to other teams, 1 is lowest and 30 is highest)
+# getting years 2007-2015 worked perfectly with this function (had to manually
+# remove an extra column from year 2007)
 
-mlb_adjusted <- mlb_full %>% 
-  mutate(
-    payroll_adjusted = map2_dbl(year, payroll, ~ inflation_calc(.x, .y))) %>% 
-  rename(franchise_id = franch_id) %>% 
-  group_by(year) %>% 
-  mutate(payroll_rank = rank(payroll))
+s2007 <- pull_mls_payroll(2007, "http://s3.amazonaws.com/mlspa/2007-08-31-Salary-Information-Alphabetical.pdf?mtime=20190611125445") %>% 
+  select(-x_2)
 
-# adjust nba data for inflation using the same process
+# note: SEA Kasey Keller (GK) has no salary in 2008
 
-nba_adjusted <- nba_full %>% 
-  mutate(payroll_adjusted = map2_dbl(year, payroll,
-                                     ~ inflation_calc(.x, .y))) %>% 
-  group_by(season) %>% 
-  mutate(payroll_rank = rank(payroll))
+s2008 <- pull_mls_payroll(2008, "http://s3.amazonaws.com/mlspa/2008-10-07-Salary-Information-Alphabetical.pdf?mtime=20190611125423")
 
-nba_adjusted
+s2009 <- pull_mls_payroll(2009, "http://s3.amazonaws.com/mlspa/2009-09-15-Salary-Information-Alphabetical.pdf?mtime=20190611125405")
 
-# NOTE: missing payroll data for
-# 1986-87 Trail Blazers
-# 1986-87 Bucks
-# 1986-87 Clippers
-# 1986-87 Kings
-# 1986-87 Lakers
-# 1986-87 SuperSonics
-# 1986-87 Warriors
-# 1989-90 Magic
-# 1989-90 Pacers
-# 1989-90 Timberwolves
+s2010 <- pull_mls_payroll(2010, "http://s3.amazonaws.com/mlspa/2010-08-12-Salary-Information-Alphabetical.pdf?mtime=20190611125347")
+
+s2011 <- pull_mls_payroll(2011, "http://s3.amazonaws.com/mlspa/2011-09-01-Salary-Information-Alphabetical.pdf?mtime=20190611125323")
+
+s2012 <- pull_mls_payroll(2012, "http://s3.amazonaws.com/mlspa/2012-10-01-Salary-Information-Alphabetical.pdf?mtime=20190611125245")
+
+s2013 <- pull_mls_payroll(2013, "http://s3.amazonaws.com/mlspa/September-15-2013-Salary-Information-Alphabetical.pdf?mtime=20180416202425")
+
+s2014 <- pull_mls_payroll(2014, "http://s3.amazonaws.com/mlspa/September-15-2014-Salary-Information-Alphabetical.pdf?mtime=201804162")
+
+s2015 <- pull_mls_payroll(2015, "http://s3.amazonaws.com/mlspa/September-15-2015-Salary-Information-Alphabetical.pdf?mtime=20180416202358")
+
+
+
+
+
+
+
+########### NOT WORKING
+
+s2016 <- pull_mls_payroll(2016, "http://s3.amazonaws.com/mlspa/September-15-2016-Salary-Information-Alphabetical.pdf?mtime=20180416202344")
+
+out2016 <- extract_tables("http://s3.amazonaws.com/mlspa/September-15-2016-Salary-Information-Alphabetical.pdf?mtime=20180416202344")
+
+out2016
+
+do.call(rbind, out) %>% 
+    as.data.frame() %>% 
+    row_to_names(2) %>% 
+    clean_names() %>% 
+    filter(club != "Club",
+           base_salary != year) %>% 
+    mutate(year = year,
+           club = as.character(club),
+           last_name = as.character(last_name),
+           first_name = as.character(first_name),
+           pos = as.character(pos),
+           base_salary = gsub(" ", "", base_salary),
+           base_salary = as.numeric(str_remove_all(base_salary, ",")),
+           compensation = str_remove_all(compensation, ","),
+           compensation = as.numeric(str_remove_all(compensation, "\\$"))) %>% 
+    select(year, everything(), -x)
+
+out2017 <- extract_tables("http://s3.amazonaws.com/mlspa/September-15-2017-Salary-Information-Alphabetical.pdf?mtime=20180416202256")
+
+s2017 <- pull_mls_payroll(2017, "http://s3.amazonaws.com/mlspa/September-15-2017-Salary-Information-Alphabetical.pdf?mtime=20180416202256")
+
+s2017
+
+
+
+
+
+
+# function didn't work smoothly with 2018, so did it manually
+
+out2018 <- extract_tables("http://s3.amazonaws.com/mlspa/2018-09-15-Salary-Information-Alphabetical.pdf?mtime=20190611125547")
+
+# had to make a few small adjustments to the function: use 1 instead of 2 in
+# row_to_names, change salary to base_salary, remove column x_2
+
+s2018 <- do.call(rbind, out2018) %>% 
+    as.data.frame() %>% 
+    row_to_names(1) %>% 
+    clean_names() %>% 
+    rename(base_salary = salary) %>% 
+    filter(club != "Club",
+           base_salary != 2018) %>% 
+    mutate(year = 2018,
+           club = as.character(club),
+           last_name = as.character(last_name),
+           first_name = as.character(first_name),
+           pos = as.character(pos),
+           base_salary = gsub(" ", "", base_salary),
+           base_salary = as.numeric(str_remove_all(base_salary, ",")),
+           compensation = str_remove_all(compensation, ","),
+           compensation = as.numeric(str_remove_all(compensation, "\\$"))) %>% 
+    select(year, everything(), -x, -x_2)
+
+# function didn't work smoothly with 2019 either, so again did it manually
+
+out2019 <- extract_tables("http://s3.amazonaws.com/mlspa/Salary-List-Fall-Release-FINAL-Salary-List-Fall-Release-MLS.pdf?mtime=20190927175823")
+
+# a few more small adjustments to the function: renaming pos/salary/compensation
+# columns, removing a few extra characters from salary and compensation
+# variables prior to converting to type double
+
+s2019 <- do.call(rbind, out2019) %>% 
+  as.data.frame() %>% 
+  row_to_names(1) %>% 
+  clean_names() %>% 
+  rename(pos = playing_position,
+         base_salary = cy_salary_annual,
+         compensation = cy_guaranteed_comp_annual) %>% 
+  filter(club != "Club",
+         base_salary != 2019) %>% 
+  mutate(year = 2019,
+         club = as.character(club),
+         last_name = as.character(last_name),
+         first_name = as.character(first_name),
+         pos = as.character(pos),
+         base_salary = gsub("\\$", "", base_salary),
+         base_salary = gsub(")", "", base_salary),
+         base_salary = as.numeric(str_remove_all(base_salary, ",")),
+         compensation = gsub(")", "", compensation),
+         compensation = str_remove_all(compensation, ","),
+         compensation = as.numeric(str_remove_all(compensation, "\\$"))) %>% 
+  select(year, everything())
+
+
+
+# combining all salary datasets into one dataframe
+
+mls_salaries <- bind_rows(s2007,
+                         s2008,
+                         s2009,
+                         s2010,
+                         s2011,
+                         s2012,
+                         s2013,
+                         s2014,
+                         s2015,
+                         # s2016,
+                         # s2017,
+                         s2018,
+                         s2019)
+
+# calculating team payrolls by summing salaries after grouping by team and year.
+# filtering to remove salary groups not belonging to teams (e.g. "Pool",
+# "Retired", etc.) - found break point by arranging to find lowest total that
+# actually reflected a proper team payroll and lopping off everything below that
+# cutoff
+
+mls_payroll <- mls_salaries %>% 
+  group_by(year, club) %>% 
+  summarize(payroll = sum(compensation, na.rm = TRUE)) %>% 
+  filter(payroll > 1666000,
+         club != "Major League Soccer") %>% 
+  ungroup()
+
+mls_payroll
 
 ```
+
 
 ```{r save-to-rdata, echo=FALSE}
 
 save(mlb_adjusted, file = "shiny/data-files/mlb.Rdata")
 save(nba_adjusted, file = "shiny/data-files/nba.Rdata")
+save(nhl_adjusted, file = "shiny/data-files/nhl.Rdata")
 save(nba_adjusted, mlb_adjusted, file = "data-files/mlb&nba.Rdata")
+save(nhl_adjusted, file = "data-files/nhl&mls.Rdata")
 
 ```
 
