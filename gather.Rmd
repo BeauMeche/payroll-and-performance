@@ -493,28 +493,11 @@ nba_full <- nba_team_performance %>%
 
 ```
 
-```{r gather-nhl-data}
+```{r nhl-data}
 
-# note: 2004-05 season missing due to lockout (no season)
+# note: 2004-05 season missing due to lockout
 
-read_html("https://en.wikipedia.org/wiki/List_of_team_payrolls_in_the_NHL") %>% 
-  html_nodes(css = "table") %>% 
-  html_table(fill = TRUE) %>% 
-  .[5] %>% 
-  as.data.frame() %>% 
-  clean_names()  %>% 
-  rename(payroll = team_payroll) %>% 
-  select(year, payroll) %>% 
-  mutate(location = rep("Carolina", nrow(.)),
-         mascot = rep("Hurricanes", nrow(.)),
-         team = paste(location, mascot, sep = " "),
-         payroll = str_remove_all(payroll, "[$,]"),
-         payroll = gsub("\\[.*", "", payroll),
-         payroll = as.numeric(payroll),
-         year = paste(substr(year, 0, 4), substr(year, 6, 7), sep = "-"),
-         year = ifelse(year == "1999-20",
-                       "1999-00",
-                       year))
+# creating function to pull NHL payroll data from wikipedia page and tidy it
 
 pull_nhl_payroll <- function(table_number, location, mascot){
   read_html(
@@ -537,6 +520,8 @@ pull_nhl_payroll <- function(table_number, location, mascot){
                        "1999-00",
                        year))
 }
+
+# gathering data for the 30 NHL teams
 
 # Eastern Conference, Metropolitan Division
 
@@ -608,7 +593,10 @@ wt13 <- pull_nhl_payroll(34, "San Jose", "Sharks")
 
 wt14 <- pull_nhl_payroll(35, "Vancouver", "Canucks")
 
-# Vegas Golden Knights are a team, but only have payroll data starting in 2017
+# Note: Vegas Golden Knights are a team, but joined league in 2017 (payroll data
+# doesn't match dates for other teams)
+
+# joining all NHL team payroll data together
 
 nhl_east_payroll <- bind_rows(t1,
                       t2,
@@ -645,6 +633,8 @@ nhl_west_payroll <- bind_rows(wt1,
 nhl_payroll <- bind_rows(nhl_east_payroll,
                          nhl_west_payroll)
 
+# adding year variable and adjusting for inflation
+
 nhl_payroll %<>% 
   mutate(season = year,
          year = as.numeric(substr(year, 0, 4)) + 1,
@@ -655,7 +645,8 @@ nhl_payroll %<>%
 
 
 
-# standings data by team
+# creating function to pull standings data by team from hockey-reference.com and
+# tidy it up
 
 pull_nhl_standings <- function(url){
  read_html(url) %>% 
@@ -673,8 +664,10 @@ pull_nhl_standings <- function(url){
                        team)) 
 }
 
-# team name changed from Mighty Ducks of Anaheim to Anaheim Ducks in 2006-07,
-# but I'm ignoring that
+# pulling standing/performance data for all 30 teams
+
+# note: team name changed from Mighty Ducks of Anaheim to Anaheim Ducks in
+# 2006-07, but I'm ignoring that
 
 ducks <- pull_nhl_standings(
   "https://www.hockey-reference.com/teams/ANA/history.html") %>% 
@@ -796,7 +789,7 @@ thrashers <- pull_nhl_standings(
   "https://www.hockey-reference.com/teams/WPG/history.html"
 )
 
-
+# binding performance data into one dataframe
 
 nhl_performance <- bind_rows(ducks,
                              coyotes,
@@ -829,17 +822,12 @@ nhl_performance <- bind_rows(ducks,
                              capitals,
                              thrashers)
 
-
+# joining performance data with payroll data and filtering just for rows with
+# payroll data (lots of extra rows in the performance data)
 
 nhl_adjusted <- full_join(nhl_performance, nhl_payroll,
                           by = c("team", "season")) %>% 
   filter(!is.na(payroll_adjusted))
-
-nhl_adjusted %>% 
-  ggplot(aes(payroll_adjusted, pts)) +
-  geom_point(aes(color = playoffs)) +
-  geom_smooth(method = "lm") +
-  facet_wrap(~ season, scales = "free")
 
 ```
 
