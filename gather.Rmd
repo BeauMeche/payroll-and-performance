@@ -932,27 +932,26 @@ s2014 <- pull_mls_payroll(2014, "http://s3.amazonaws.com/mlspa/September-15-2014
 
 s2015 <- pull_mls_payroll(2015, "http://s3.amazonaws.com/mlspa/September-15-2015-Salary-Information-Alphabetical.pdf?mtime=20180416202358")
 
+# for 2016 and 2017 tables, PDF formatting was offset slightly on one page, so
+# it wouldn't read cleanly with the function
 
-
-
-
-
-
-########### NOT WORKING
-
-s2016 <- pull_mls_payroll(2016, "http://s3.amazonaws.com/mlspa/September-15-2016-Salary-Information-Alphabetical.pdf?mtime=20180416202344")
+# For 2016, I manually deleted the extra column in the last page that had been
+# erroneously read in, then manually tidied the data
 
 out2016 <- extract_tables("http://s3.amazonaws.com/mlspa/September-15-2016-Salary-Information-Alphabetical.pdf?mtime=20180416202344")
 
-out2016
+out2016[[12]] <- out2016[[12]] %>% 
+  as.data.frame() %>% 
+  select(-V4) %>% 
+  as.matrix()
 
-do.call(rbind, out) %>% 
+s2016 <- do.call(rbind, out2016) %>% 
     as.data.frame() %>% 
     row_to_names(2) %>% 
     clean_names() %>% 
     filter(club != "Club",
-           base_salary != year) %>% 
-    mutate(year = year,
+           base_salary != 2016) %>% 
+    mutate(year = 2016,
            club = as.character(club),
            last_name = as.character(last_name),
            first_name = as.character(first_name),
@@ -963,18 +962,39 @@ do.call(rbind, out) %>%
            compensation = as.numeric(str_remove_all(compensation, "\\$"))) %>% 
     select(year, everything(), -x)
 
+# for 2017, I followed a similar procedure, manually tidying the misread
+# information from one page of the PDF so its format matched the rest before
+# binding it all together and saving it as a dataframe
+
 out2017 <- extract_tables("http://s3.amazonaws.com/mlspa/September-15-2017-Salary-Information-Alphabetical.pdf?mtime=20180416202256")
 
-s2017 <- pull_mls_payroll(2017, "http://s3.amazonaws.com/mlspa/September-15-2017-Salary-Information-Alphabetical.pdf?mtime=20180416202256")
+out2017[[13]] <- out2017[[13]] %>% 
+  as.data.frame() %>% 
+  mutate(V1 = paste(V1, V2, sep = " ")) %>% 
+  as.matrix()
 
-s2017
+s2017 <- do.call(rbind, out2017) %>% 
+    as.data.frame() %>% 
+    row_to_names(2) %>% 
+    clean_names() %>% 
+    rename(club = club_last_name,
+           last_name = x) %>% 
+    mutate(last_name = word(club, start = 2, end = -1),
+           club = word(club, start = 1)) %>% 
+    filter(club != "Club",
+           base_salary != 2017) %>% 
+    mutate(year = 2017,
+           club = as.character(club),
+           last_name = as.character(last_name),
+           first_name = as.character(first_name),
+           pos = as.character(pos),
+           base_salary = gsub(" ", "", base_salary),
+           base_salary = as.numeric(str_remove_all(base_salary, ",")),
+           compensation = str_remove_all(compensation, ","),
+           compensation = as.numeric(str_remove_all(compensation, "\\$"))) %>% 
+    select(year, everything(), -x_2)
 
-
-
-
-
-
-# function didn't work smoothly with 2018, so did it manually
+# function didn't work smoothly with 2018, so did it manually again
 
 out2018 <- extract_tables("http://s3.amazonaws.com/mlspa/2018-09-15-Salary-Information-Alphabetical.pdf?mtime=20190611125547")
 
@@ -1029,8 +1049,6 @@ s2019 <- do.call(rbind, out2019) %>%
          compensation = as.numeric(str_remove_all(compensation, "\\$"))) %>% 
   select(year, everything())
 
-
-
 # combining all salary datasets into one dataframe
 
 mls_salaries <- bind_rows(s2007,
@@ -1042,25 +1060,23 @@ mls_salaries <- bind_rows(s2007,
                          s2013,
                          s2014,
                          s2015,
-                         # s2016,
-                         # s2017,
+                         s2016,
+                         s2017,
                          s2018,
                          s2019)
 
 # calculating team payrolls by summing salaries after grouping by team and year.
-# filtering to remove salary groups not belonging to teams (e.g. "Pool",
-# "Retired", etc.) - found break point by arranging to find lowest total that
-# actually reflected a proper team payroll and lopping off everything below that
-# cutoff
 
 mls_payroll <- mls_salaries %>% 
   group_by(year, club) %>% 
-  summarize(payroll = sum(compensation, na.rm = TRUE)) %>% 
-  filter(payroll > 1666000,
-         club != "Major League Soccer") %>% 
+  summarize(payroll = sum(compensation, na.rm = TRUE)) %>%
   ungroup()
 
-mls_payroll
+# note: may need to filter to remove salary groups not belonging to teams (e.g.
+# "Pool", "Retired", "Major League Soccer", etc.) - find break point by
+# arranging to find lowest total that actually reflected a proper team payroll
+# and lopping off everything below that cutoff (also note that FC Cincinati in
+# 2018 has higher salary than breakoff point)
 
 ```
 
