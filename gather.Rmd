@@ -19,6 +19,7 @@ library(gt)
 library(broom)
 library(rJava)
 library(tabulizer)
+library(readxl)
 
 ```
 
@@ -1063,20 +1064,78 @@ mls_salaries <- bind_rows(s2007,
                          s2016,
                          s2017,
                          s2018,
-                         s2019)
+                         s2019) %>% 
+  mutate(club = case_when(club == "CHI" ~ "Chicago Fire FC",
+                          club == "CHV" ~ "Chivas USA",
+                          club == "CLB" ~ "Columbus Crew SC",
+                          club == "COL" ~ "Colorado Rapids",
+                          club == "DAL" ~ "FC Dallas",
+                          club == "DC" ~ "DC United",
+                          club == "HOU" ~ "Houston Dynamo",
+                          club == "KC" ~ "Sporting Kansas City",
+                          club == "LA" ~ "LA Galaxy",
+                          club == "NE" ~ "New England Revolution",
+                          club == "NY" ~ "New York Red Bulls",
+                          club == "RSL" ~ "Real Salt Lake",
+                          club == "TFC" ~ "Toronto FC",
+                          club == "SEA" ~ "Seattle Sounders FC",
+                          club == "SJ" ~ "San Jose Earthquakes",
+                          club == "PHI" ~ "Philadelphia Union",
+                          club == "POR" ~ "Portland Timbers",
+                          club == "VAN" ~ "Vancouver Whitecaps FC",
+                          club == "MTL" ~ "Montreal Impact",
+                          club == "NYCFC" ~ "New York City FC",
+                          club == "ORL" ~ "Orlando City SC",
+                          club == "ATL" ~ "Atlanta United FC",
+                          club == "NYRB" ~ "New York Red Bulls",
+                          club == "LAFC" ~ "Los Angeles FC",
+                          club == "MNUFC" ~ "Minnesota United FC",
+                          club == "TOR" ~ "Toronto FC",
+                          club == "Atlanta United" ~ "Atlanta United FC",
+                          club == "Chicago Fire" ~ "Chicago Fire FC",
+                          club == "Columbus Crew" ~ "Columbus Crew SC",
+                          club == "Minnesota United" ~ "Minnesota United FC",
+                          club == "Vancouver Whitecaps" ~ "Vancouver Whitecaps FC",
+                          TRUE ~ club))
 
 # calculating team payrolls by summing salaries after grouping by team and year.
 
 mls_payroll <- mls_salaries %>% 
   group_by(year, club) %>% 
   summarize(payroll = sum(compensation, na.rm = TRUE)) %>%
-  ungroup()
+  ungroup() %>% 
+  mutate(payroll_adjusted = map2_dbl(year, payroll, ~inflation_calc(.x, .y)))
 
-# note: may need to filter to remove salary groups not belonging to teams (e.g.
-# "Pool", "Retired", "Major League Soccer", etc.) - find break point by
-# arranging to find lowest total that actually reflected a proper team payroll
-# and lopping off everything below that cutoff (also note that FC Cincinati in
-# 2018 has higher salary than breakoff point)
+
+
+# adding MLS performance data
+
+# spreadsheet created by copying and pasting data from pages at
+# https://www.mlssoccer.com/standings/mls/(year)/ where (year) is replaced with
+# the relevant year in the format 2007
+
+# playoff performance data copied and pasted into same spreadsheet from pages at
+# https://en.wikipedia.org/wiki/(year)_MLS_Cup_Playoffs where (year) is replaced
+# with the relevant year in the format 2007
+
+mls_performance <- read_excel("data-files/MLS_standings_2007-2019.xlsx") %>% 
+  clean_names() %>% 
+  filter(!is.na(club),
+         club != "Club") %>% 
+  rename(conf_rank = number) %>% 
+  select(year, conference, everything(), -w_l_t_12, -w_l_t_13) %>% 
+  mutate(club = case_when(club == "Los Angeles Football Club" ~ "Los Angeles FC",
+                          club == "D.C. United" ~ "DC United",
+                          TRUE ~ club))
+
+
+
+# joining mls performance and payroll data
+
+mls_adjusted <- full_join(mls_performance,
+                          mls_payroll,
+                          by = c("year", "club")) %>% 
+  filter(!is.na(pts))
 
 ```
 
@@ -1086,8 +1145,9 @@ mls_payroll <- mls_salaries %>%
 save(mlb_adjusted, file = "shiny/data-files/mlb.Rdata")
 save(nba_adjusted, file = "shiny/data-files/nba.Rdata")
 save(nhl_adjusted, file = "shiny/data-files/nhl.Rdata")
+save(mls_adjusted, file = "shiny/data-files/mls.Rdata")
 save(nba_adjusted, mlb_adjusted, file = "data-files/mlb&nba.Rdata")
-save(nhl_adjusted, file = "data-files/nhl&mls.Rdata")
+save(nhl_adjusted, mls_adjusted, file = "data-files/nhl&mls.Rdata")
 
 ```
 
