@@ -1122,7 +1122,23 @@ mls_payroll <- mls_salaries %>%
 # https://en.wikipedia.org/wiki/(year)_MLS_Cup_Playoffs where (year) is replaced
 # with the relevant year in the format 2007
 
-mls_performance <- read_excel("data-files/MLS_standings_2007-2019.xlsx") %>% 
+mls_performance <- read_excel("data-files/MLS_standings_2007-2019.xlsx", 
+           col_types = c("numeric",
+                         "text",
+                         "numeric",
+                         "numeric",
+                         "numeric",
+                         "numeric",
+                         "numeric",
+                         "numeric",
+                         "numeric",
+                         "numeric",
+                         "numeric",
+                         "text",
+                         "text",
+                         "numeric",
+                         "text",
+                         "text")) %>% 
   clean_names() %>% 
   filter(!is.na(club),
          club != "Club") %>% 
@@ -1132,8 +1148,6 @@ mls_performance <- read_excel("data-files/MLS_standings_2007-2019.xlsx") %>%
                           club == "D.C. United" ~ "DC United",
                           TRUE ~ club))
 
-
-
 # joining mls performance and payroll data, adding payroll_rank variable
 
 mls_adjusted <- full_join(mls_performance,
@@ -1141,8 +1155,7 @@ mls_adjusted <- full_join(mls_performance,
                           by = c("year", "club")) %>% 
   filter(!is.na(pts)) %>% 
   group_by(year) %>% 
-  mutate(payroll_rank = rank(payroll)) %>% 
-  select(year, club, payroll, payroll_rank)
+  mutate(payroll_rank = rank(payroll))
 
 ```
 
