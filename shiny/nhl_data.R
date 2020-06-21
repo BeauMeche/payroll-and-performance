@@ -30,7 +30,7 @@ nhl_plot_1 <- nhl_adjusted %>%
 
 nhl_plot_2 <- nhl_adjusted %>% 
   ggplot(aes(payroll_adjusted / 1000000, pts)) +
-  geom_point(aes(text = team), na.rm = TRUE) +
+  geom_point(aes(text = team)) +
   facet_wrap(~ season, scales = "free_x") +
   labs(x = "Payroll (in millions of USD, adjusted)",
        y = "Regular Season Points") +
@@ -57,8 +57,7 @@ nhl_plot_3 <- nhl_adjusted %>%
 
 # table for cor between payroll and points by season
 
-nhl_year_cor_table 
-nhl_adjusted %>% 
+nhl_year_cor_table <- nhl_adjusted %>% 
   group_by(season) %>% 
   summarize(cor = cor(payroll_adjusted, pts)) %>%
   mutate(cor = round(cor, digits = 2)) %>% 
