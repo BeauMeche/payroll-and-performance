@@ -690,12 +690,15 @@ nhl_west_payroll <- bind_rows(wt1,
 nhl_payroll <- bind_rows(nhl_east_payroll,
                          nhl_west_payroll)
 
-# adding year variable and adjusting for inflation
+# adding year variable, adjusting for inflation, and adding payroll_rank
 
 nhl_payroll %<>% 
   mutate(season = year,
          year = as.numeric(substr(year, 0, 4)) + 1,
-         payroll_adjusted = map2_dbl(year, payroll, ~ inflation_calc(.x, .y)))
+         payroll_adjusted = map2_dbl(year, payroll, 
+                                     ~ inflation_calc(.x, .y))) %>%   
+  group_by(year) %>% 
+  mutate(payroll_rank = rank(payroll))
 
 
 # creating function to pull standings data by team from hockey-reference.com and
@@ -1104,7 +1107,8 @@ mls_payroll <- mls_salaries %>%
   group_by(year, club) %>% 
   summarize(payroll = sum(compensation, na.rm = TRUE)) %>%
   ungroup() %>% 
-  mutate(payroll_adjusted = map2_dbl(year, payroll, ~inflation_calc(.x, .y)))
+  mutate(payroll_adjusted = map2_dbl(year, payroll, 
+                                     ~inflation_calc(.x, .y)))
 
 
 
@@ -1130,12 +1134,15 @@ mls_performance <- read_excel("data-files/MLS_standings_2007-2019.xlsx") %>%
 
 
 
-# joining mls performance and payroll data
+# joining mls performance and payroll data, adding payroll_rank variable
 
 mls_adjusted <- full_join(mls_performance,
                           mls_payroll,
                           by = c("year", "club")) %>% 
-  filter(!is.na(pts))
+  filter(!is.na(pts)) %>% 
+  group_by(year) %>% 
+  mutate(payroll_rank = rank(payroll)) %>% 
+  select(year, club, payroll, payroll_rank)
 
 ```
 
