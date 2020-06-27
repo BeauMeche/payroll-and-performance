@@ -13,7 +13,7 @@ p3 <- '"Success" is examined here only by total wins in the regular season. It
 would be interesting to also look at success as measured by metrics of 
 post-season performance (such as making the playoffs or winning a championship).
 My data shows that payroll correlates with regular season win percentage, but 
-will that hold true for playoof success as well? My hypothesis is that teams can
+will that hold true for playoff success as well? My hypothesis is that teams can
 "buy" a certain level of regular season success by paying a lot to talented 
 players, but that it does not necessarily win them a championship.'
 
@@ -65,7 +65,7 @@ p7c <- " for my scraping code."
 
 p8 <- "My name is Westley Cook and I'm a Harvard senior majoring in East Asian 
 Studies with a secondary in Government. You can reach me at 
-wkcook@college.harvard.edu and find me on "
+westleykcook@gmail.com and find me on "
 
 p8_link <- "https://github.com/westleycook"
 
