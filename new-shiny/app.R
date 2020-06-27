@@ -548,9 +548,11 @@ server <- function(input, output) {
         
         # select league's plot to display based on input$league_2
         
-        ifelse(input$league_2 == "nba",
-               mod_plot_1 <- nba_mod_plot_1,
-               mod_plot_1 <- mlb_mod_plot_1)
+        mod_plot_1 <- case_when(input$league_2 == "nba" ~ list(nba_mod_plot_1),
+                                input$league_2 == "mlb" ~ list(mlb_mod_plot_1),
+                                input$league_2 == "nhl" ~ list(nhl_mod_plot_1),
+                                TRUE ~ list(mls_mod_plot_1)) %>%
+            .[[1]]
         
         # display the plot with hover revealing text, specify dimensions, and
         # customize mode bar
@@ -573,9 +575,11 @@ server <- function(input, output) {
         
         # select league's plot to display based on input$league_2
         
-        ifelse(input$league_2 == "nba",
-               mod_plot_2 <- nba_mod_plot_2,
-               mod_plot_2 <- mlb_mod_plot_2)
+        mod_plot_2 <- case_when(input$league_2 == "nba" ~ list(nba_mod_plot_2),
+                                input$league_2 == "mlb" ~ list(mlb_mod_plot_2),
+                                input$league_2 == "nhl" ~ list(nhl_mod_plot_2),
+                                TRUE ~ list(mls_mod_plot_2)) %>%
+            .[[1]]
         
         # display the plot with hover revealing text, specify dimensions, and
         # customize mode bar
