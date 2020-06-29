@@ -21,15 +21,15 @@ ui <- navbarPage(
     
     # title
     
-    "Payroll and Performance in the NBA and MLB",
+    "Payroll and Performance in Professional Sports",
     
     # trends panel, which has plots (plotlys) and tables to show data by league
     
-    tabPanel("Trends",
+    tabPanel("Payroll Trends",
              fluidPage(
-                 titlePanel("Payroll and Regular Season Win Percentage"),
+                 titlePanel("Payroll by League"),
                  
-                 # sidebar with selector to choose league and explanatory text
+                 # sidebar with explanatory text and selector to choose league 
                  
                  sidebarLayout(
                      sidebarPanel(
@@ -37,62 +37,79 @@ ui <- navbarPage(
                          p("Note: display is best in large windows, and may take
                             time to load"),
                          selectInput(
-                             "league",
+                             "league_1",
                              "League",
                              c("NBA" = "nba", "MLB" = "mlb",
                                "NHL" = "nhl", "MLS" = "mls")
                          ),
-                         p("All plots on this page are interactive; try hovering
+                         p("All plots on this site are interactive; try hovering
                             your mouse over a point!"),
                          p("A control bar at the top of each plot offers 
                             additional options such as zoom, autoscale,
-                            downloading as png, and resetting to the default."),
-                         p("If the plot to the right showing payroll over time
-                            doesn't size properly, simply reload the page."),
-                         p(strong("I recommend clicking autoscale on the larger
-                                  plots."))
+                            downloading as png, and resetting to the default.")
                      ),
                      
                      # display plotly of payroll over time; second bullet point
                      # changes by league
                      
                      mainPanel(
-                         h3(strong("Change in Payroll over Time, 1985-2018")),
-                         tags$ul(
-                            tags$li(h4("Tremendous growth in payroll, even after 
-                                    adjusting for inflation")),
-                            tags$li(h4(textOutput("payroll_over_time"))),
-                         ),
-                         plotlyOutput("payroll")
+                         h3(strong("Change in Payroll over Time")),
+                         h4(textOutput("payroll_over_time_subtitle")),
+                         tabsetPanel(type = "tabs",
+                                     tabPanel("Plot", plotlyOutput("payroll")),
+                                     tabPanel("Observations",
+                                              h4(textOutput("payroll_over_time")
+                                                 )
+                                              )
+                         )
                      )
-                 ),
-                 
-                 # give a bit of white space between panels
-                 
-                 br(),
+                 )
+             )
+    ),
+             
+    tabPanel("Payroll/Performance Trends by Year",
+             fluidPage(
+                 titlePanel("Payroll and Regular Season Performance"),
                  
                  # sidebar to hold table of correlation coefficients by year
                  # all text except title customized by league
                  
                  sidebarLayout(
                      sidebarPanel(
-                         h4(strong("Payroll and Regular Season Wins: Correlation
-                                   Table"),
-                            align = "center"),
-                         h4(textOutput("year_cor_text"),
-                            align = "center"),
-                         h5(textOutput("year_cor_max"),
-                            align = "center"),
-                         h5(textOutput("year_cor_min"),
-                            align = "center"),
-                         h5(textOutput("year_cor_avg"),
-                            align = "center"),
-                         gt_output("year_cor"),
-                         br(),
-                         p("Most seasons see a moderate correlation between
-                           payroll and win percentage, but the relationship
-                           is sometimes very weak or nonexistent.")
+                         h4(strong("Select a League")),
+                         p("Note: display is best in large windows, and may take
+                            time to load"),
+                         selectInput(
+                             "league_2",
+                             "League",
+                             c("NBA" = "nba", "MLB" = "mlb",
+                               "NHL" = "nhl", "MLS" = "mls")
+                         ),
+                         p("All plots on this site are interactive; try hovering
+                            your mouse over a point!"),
+                         p("A control bar at the top of each plot offers 
+                            additional options such as zoom, autoscale,
+                            downloading as png, and resetting to the default.")
                      ),
+                     
+                     # sidebarPanel(
+                     #     h4(strong("Payroll and Regular Season Wins: Correlation
+                     #               Table"),
+                     #        align = "center"),
+                     #     h4(textOutput("year_cor_text"),
+                     #        align = "center"),
+                     #     h5(textOutput("year_cor_max"),
+                     #        align = "center"),
+                     #     h5(textOutput("year_cor_min"),
+                     #        align = "center"),
+                     #     h5(textOutput("year_cor_avg"),
+                     #        align = "center"),
+                     #     gt_output("year_cor"),
+                     #     br(),
+                     #     p("Most seasons see a moderate correlation between
+                     #       payroll and win percentage, but the relationship
+                     #       is sometimes very weak or nonexistent.")
+                     # ),
                      
                      # main panel displays plotly of payroll and wins by year
                      
@@ -101,44 +118,66 @@ ui <- navbarPage(
                          h4("Does the relationship between payroll and win
                             percentage vary by year? Clearly, the answer is 
                             yes."),
-                         plotlyOutput("by_year"),
+                         tabsetPanel(type = "tabs",
+                                     tabPanel("Plot", plotlyOutput("by_year"))
+                                    ),
                          
                          # set height so next sidebar doesn't overlap with plot
                          # in mobile view/small windows
                          
-                         div(style = "height:200px"),
+                         div(style = "height:200px")
                     )
-                 ),
-                 
-                 # give a bit of white space between panels
-                 
-                 br(),
+                 )
+                 )
+    ),
+    tabPanel("Payroll/Performance Trends by Team",
+             fluidPage(
+                 titlePanel("Payroll and Regular Season Performance"),
                  
                  # sidebar to hold table of correlation coefficients by team
                  # all text except title customized by league
                  
+                 
+                 
                  sidebarLayout(
                      sidebarPanel(
-                         h4(strong("Payroll and Regular Season Wins:
-                                    Correlation Table"),
-                            align = "center"),
-                         h4(textOutput("team_cor_text"),
-                            align = "center"),
-                         h5(textOutput("team_cor_max"),
-                            align = "center"),
-                         h5(textOutput("team_cor_min"),
-                            align = "center"),
-                         h5(textOutput("team_cor_avg"),
-                            align = "center"),
-                         gt_output("team_cor"),
-                         br(),
-                         p("Most teams tend to earn more wins when they spend 
-                           more on payroll. But others see no strong 
-                           relationship between payroll and win percentage, and 
-                           a few have the dubious distinction of experiencing a 
-                           NEGATIVE relationship - meaning they tend to win LESS
-                           when they spend more than their competitors.")
+                         h4(strong("Select a League")),
+                         p("Note: display is best in large windows, and may take
+                            time to load"),
+                         selectInput(
+                             "league_3",
+                             "League",
+                             c("NBA" = "nba", "MLB" = "mlb",
+                               "NHL" = "nhl", "MLS" = "mls")
+                         ),
+                         p("All plots on this site are interactive; try hovering
+                            your mouse over a point!"),
+                         p("A control bar at the top of each plot offers 
+                            additional options such as zoom, autoscale,
+                            downloading as png, and resetting to the default.")
                      ),
+                     
+                     # sidebarPanel(
+                     #     h4(strong("Payroll and Regular Season Wins:
+                     #                Correlation Table"),
+                     #        align = "center"),
+                     #     h4(textOutput("team_cor_text"),
+                     #        align = "center"),
+                     #     h5(textOutput("team_cor_max"),
+                     #        align = "center"),
+                     #     h5(textOutput("team_cor_min"),
+                     #        align = "center"),
+                     #     h5(textOutput("team_cor_avg"),
+                     #        align = "center"),
+                     #     gt_output("team_cor"),
+                     #     br(),
+                     #     p("Most teams tend to earn more wins when they spend 
+                     #       more on payroll. But others see no strong 
+                     #       relationship between payroll and win percentage, and 
+                     #       a few have the dubious distinction of experiencing a 
+                     #       NEGATIVE relationship - meaning they tend to win LESS
+                     #       when they spend more than their competitors.")
+                     # ),
                      
                      # main panel holds plotly of payroll and wins by team
                      
@@ -150,10 +189,12 @@ ui <- navbarPage(
                          p(strong("Note the x axis: payroll rank is how a team's
                             spending in a season compared to others in the
                             league (1 is lowest)")),
-                         plotlyOutput("by_team")
+                         tabsetPanel(type = "tabs",
+                                     tabPanel("Plot", plotlyOutput("by_team"))
                          )
                      )
              )
+    )
     ),
     
     # model panel, to talk more about model and regression results
@@ -170,7 +211,7 @@ ui <- navbarPage(
                      p("Note: the effects documented on this page are not
                        necessarily causal; rather, they represent the average
                        effect on win percentage associated with payroll"),
-                     selectInput("league_2",
+                     selectInput("league_4",
                                  "League",
                                  c("NBA" = "nba", "MLB" = "mlb",
                                    "NHL" = "nhl", "MLS" = "mls")
@@ -291,20 +332,40 @@ ui <- navbarPage(
 
 server <- function(input, output) {
     
-    # reactive bullet point for payroll over time plot, giving a unique
+    # reactive subtitle for payroll over time plot
+    
+    output$payroll_over_time_subtitle <- renderText({
+        
+        subtitle_text <- case_when(input$league_1 == "nba" ~
+                                       "NBA, 1985 - 2018",
+                                   input$league_1 == "mlb" ~
+                                       "MLB, 1985 - 2016",
+                                   input$league_1 == "nhl" ~
+                                       "NHL, 1999 - 2008",
+                                   TRUE ~ "MLS, 2007 - 2019")
+    })
+    
+    # reactive observation text for payroll over time plot, giving a unique
     # description for each league
     
     output$payroll_over_time <- renderText({
         
         # choose text to display based on input$league selector
         
-        payroll_over_time_text <- ifelse(input$league == "nba",
-               
-               "In the NBA, inequality has also grown over time, though the 
-               spread was widest between 1997 and 2008",
-               
-               "In the MLB, inequality has grown massively, led by the 
-               high-spending New York Yankees")
+        payroll_over_time_text <- case_when(
+            input$league_1 == "nba" ~
+                "Tremendous growth in payroll over time, with some growth in 
+                inequality as well; inequality was greatest between 1997 and 
+                2008",
+            input$league_1 == "mlb" ~
+               "Payroll over time has grown substantially; inequality has also 
+               grown, led by the high-spending New York Yankees and LA Dodgers",
+            input$league_1 == "nhl" ~
+                "Payroll spread condensed dramatically after 2005 lockout as top
+                spenders began spending significantly less",
+            TRUE ~ "Slow growth in payroll over time, with a few teams in LA, 
+                NYC, and Toronto consistently outspending the pack")
+        
     })
     
     # reactive plotly for payroll over time based on league selector; pre-made
@@ -314,9 +375,9 @@ server <- function(input, output) {
         
         # choose plot based on input$league selector
         
-        plot1 <- case_when(input$league == "nba" ~ list(nba_plot_1),
-                           input$league == "mlb" ~ list(mlb_plot_1),
-                           input$league == "nhl" ~ list(nhl_plot_1),
+        plot1 <- case_when(input$league_1 == "nba" ~ list(nba_plot_1),
+                           input$league_1 == "mlb" ~ list(mlb_plot_1),
+                           input$league_1 == "nhl" ~ list(nhl_plot_1),
                            TRUE ~ list(mls_plot_1)) %>% 
             .[[1]]
         
@@ -340,7 +401,7 @@ server <- function(input, output) {
         
         # choose text to show based on input$league selector
         
-        ifelse(input$league == "nba",
+        ifelse(input$league_2 == "nba",
                year_cor_subtitle <- "For NBA, by season",
                year_cor_subtitle <- "For MLB, by year")
     })
@@ -351,7 +412,7 @@ server <- function(input, output) {
         
         # choose text to show based on input$league selector
         
-        ifelse(input$league == "nba",
+        ifelse(input$league_2 == "nba",
                strong_year_cor <- "Relationship strongest (> 0.55) in 1984-85, 
                                    1999-00, and 2017-18",
                strong_year_cor <- "Relationship strongest (> 0.55) in 1998, 
@@ -364,7 +425,7 @@ server <- function(input, output) {
         
         # choose text to show based on input$league selector
         
-        ifelse(input$league == "nba",
+        ifelse(input$league_2 == "nba",
                weak_year_cor <- "Relationship weakest (<= 0.1) in 1986-87,
                                  2005-06, and 2006-07",
                weak_year_cor <- "Relationship weakest (< 0.05) in 1987, 1990,
@@ -377,7 +438,7 @@ server <- function(input, output) {
         
         # choose text to show based on input$league selector
         
-        ifelse(input$league == "nba",
+        ifelse(input$league_2 == "nba",
                avg_year_cor <- "Average correlation across years: 0.36",
                avg_year_cor <- "Average correlation across years: 0.356")
     })
@@ -389,9 +450,9 @@ server <- function(input, output) {
         # choose table to show based on input$league selector
         
         year_cor_table <- case_when(
-            input$league == "nba" ~ list(nba_year_cor_table),
-            input$league == "mlb" ~ list(mlb_year_cor_table),
-            input$league == "nhl" ~ list(nhl_year_cor_table),
+            input$league_2 == "nba" ~ list(nba_year_cor_table),
+            input$league_2 == "mlb" ~ list(mlb_year_cor_table),
+            input$league_2 == "nhl" ~ list(nhl_year_cor_table),
             TRUE ~ list(mls_year_cor_table)) %>%
         .[[1]]
         
@@ -409,9 +470,9 @@ server <- function(input, output) {
         # choose plot based on input$league selector
         
         plot2 <- case_when(
-            input$league == "nba" ~ list(nba_plot_2),
-            input$league == "mlb" ~ list(mlb_plot_2),
-            input$league == "nhl" ~ list(nhl_plot_2),
+            input$league_2 == "nba" ~ list(nba_plot_2),
+            input$league_2 == "mlb" ~ list(mlb_plot_2),
+            input$league_2 == "nhl" ~ list(nhl_plot_2),
             TRUE ~ list(mls_plot_2)) %>%
             .[[1]]
         
@@ -444,7 +505,7 @@ server <- function(input, output) {
         
         # choose text to show based on input$league selector
         
-        ifelse(input$league == "nba",
+        ifelse(input$league_3 == "nba",
                team_cor_subtitle <- "For NBA, by franchise",
                team_cor_subtitle <- "For MLB, by franchise")
     })
@@ -455,7 +516,7 @@ server <- function(input, output) {
         
         # choose text to show based on input$league selector
         
-        ifelse(input$league == "nba",
+        ifelse(input$league_3 == "nba",
                strong_team_cor <- "Relationship strongest (> 0.55) for
                                    Grizzlies, Bulls, Mavericks, and Cavaliers",
                strong_team_cor <- "Relationship strongest (0.69!) for NYY;
@@ -468,7 +529,7 @@ server <- function(input, output) {
         
         # choose text to show based on input$league selector
         
-        ifelse(input$league == "nba",
+        ifelse(input$league_3 == "nba",
                weak_team_cor <- "Relationship weakest (NEGATIVE!) for
                                  Pelicans/Hornets, Knicks, and Trail Blazers",
                weak_team_cor <- "Relationship weakest (NEGATIVE!) for TOR;
@@ -482,7 +543,7 @@ server <- function(input, output) {
         
         # choose text to show based on input$league selector
         
-        ifelse(input$league == "nba",
+        ifelse(input$league_3 == "nba",
                avg_team_cor <- "Average correlation across franchises: 0.342",
                avg_team_cor <- "Average correlation across franchises: 0.265")
     })
@@ -494,9 +555,9 @@ server <- function(input, output) {
         # choose table to show based on input$league selector
         
         team_cor_table <- case_when(
-            input$league == "nba" ~ list(nba_team_cor_table),
-            input$league == "mlb" ~ list(mlb_team_cor_table),
-            input$league == "nhl" ~ list(nhl_team_cor_table),
+            input$league_3 == "nba" ~ list(nba_team_cor_table),
+            input$league_3 == "mlb" ~ list(mlb_team_cor_table),
+            input$league_3 == "nhl" ~ list(nhl_team_cor_table),
             TRUE ~ list(mls_team_cor_table)) %>%
             .[[1]]
         
@@ -512,9 +573,9 @@ server <- function(input, output) {
         
         # choose league to plot based on input$league selector
         
-        plot3 <- case_when(input$league == "nba" ~ list(nba_plot_3),
-                           input$league == "mlb" ~ list(mlb_plot_3),
-                           input$league == "nhl" ~ list(nhl_plot_3),
+        plot3 <- case_when(input$league_3 == "nba" ~ list(nba_plot_3),
+                           input$league_3 == "mlb" ~ list(mlb_plot_3),
+                           input$league_3 == "nhl" ~ list(nhl_plot_3),
                            TRUE ~ list(mls_plot_3)) %>%
             .[[1]]
                            
@@ -548,9 +609,9 @@ server <- function(input, output) {
         
         # select league's plot to display based on input$league_2
         
-        mod_plot_1 <- case_when(input$league_2 == "nba" ~ list(nba_mod_plot_1),
-                                input$league_2 == "mlb" ~ list(mlb_mod_plot_1),
-                                input$league_2 == "nhl" ~ list(nhl_mod_plot_1),
+        mod_plot_1 <- case_when(input$league_4 == "nba" ~ list(nba_mod_plot_1),
+                                input$league_4 == "mlb" ~ list(mlb_mod_plot_1),
+                                input$league_4 == "nhl" ~ list(nhl_mod_plot_1),
                                 TRUE ~ list(mls_mod_plot_1)) %>%
             .[[1]]
         
@@ -575,9 +636,9 @@ server <- function(input, output) {
         
         # select league's plot to display based on input$league_2
         
-        mod_plot_2 <- case_when(input$league_2 == "nba" ~ list(nba_mod_plot_2),
-                                input$league_2 == "mlb" ~ list(mlb_mod_plot_2),
-                                input$league_2 == "nhl" ~ list(nhl_mod_plot_2),
+        mod_plot_2 <- case_when(input$league_4 == "nba" ~ list(nba_mod_plot_2),
+                                input$league_4 == "mlb" ~ list(mlb_mod_plot_2),
+                                input$league_4 == "nhl" ~ list(nhl_mod_plot_2),
                                 TRUE ~ list(mls_mod_plot_2)) %>%
             .[[1]]
         
