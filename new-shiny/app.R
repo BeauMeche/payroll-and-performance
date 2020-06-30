@@ -34,8 +34,6 @@ ui <- navbarPage(
                  sidebarLayout(
                      sidebarPanel(
                          h4(strong("Select a League")),
-                         p("Note: display is best in large windows, and may take
-                            time to load"),
                          selectInput(
                              "league_1",
                              "League",
@@ -67,8 +65,11 @@ ui <- navbarPage(
              )
     ),
              
-    tabPanel("Payroll/Performance Trends by Year",
+    tabPanel("Payroll and Performance by Year",
              fluidPage(
+                 
+                 tags$head(tags$style(".leftAlign{float:left;}")),
+                 
                  titlePanel("Payroll and Regular Season Performance"),
                  
                  # sidebar to hold table of correlation coefficients by year
@@ -92,34 +93,28 @@ ui <- navbarPage(
                             downloading as png, and resetting to the default.")
                      ),
                      
-                     # sidebarPanel(
-                     #     h4(strong("Payroll and Regular Season Wins: Correlation
-                     #               Table"),
-                     #        align = "center"),
-                     #     h4(textOutput("year_cor_text"),
-                     #        align = "center"),
-                     #     h5(textOutput("year_cor_max"),
-                     #        align = "center"),
-                     #     h5(textOutput("year_cor_min"),
-                     #        align = "center"),
-                     #     h5(textOutput("year_cor_avg"),
-                     #        align = "center"),
-                     #     gt_output("year_cor"),
-                     #     br(),
-                     #     p("Most seasons see a moderate correlation between
-                     #       payroll and win percentage, but the relationship
-                     #       is sometimes very weak or nonexistent.")
-                     # ),
-                     
                      # main panel displays plotly of payroll and wins by year
                      
                      mainPanel(
                          h3(strong("Relationship by Year")),
-                         h4("Does the relationship between payroll and win
-                            percentage vary by year? Clearly, the answer is 
-                            yes."),
+                         h5("Across all leagues, the relationship between 
+                            payroll and win percentage varies considerably 
+                            year-to-year."),
+                         h4(textOutput("by_year_subtitle")),
                          tabsetPanel(type = "tabs",
-                                     tabPanel("Plot", plotlyOutput("by_year"))
+                                     tabPanel("Plot", plotlyOutput("by_year")),
+                                     tabPanel("Correlation Tables",
+                                              fluidRow(
+                                                  column(6,
+                                                         gt_output("year_cor_1")
+                                                         ),
+                                                  column(6,
+                                                         gt_output("year_cor_2")
+                                                         )
+                                                  ),
+                                              class = 'leftAlign'),
+                                     tabPanel("Observations",
+                                              textOutput("obs_by_year"))
                                     ),
                          
                          # set height so next sidebar doesn't overlap with plot
@@ -130,8 +125,11 @@ ui <- navbarPage(
                  )
                  )
     ),
-    tabPanel("Payroll/Performance Trends by Team",
+    tabPanel("Payroll and Performance by Team",
              fluidPage(
+                 
+                 tags$head(tags$style(".leftAlign{float:left;}")),
+                 
                  titlePanel("Payroll and Regular Season Performance"),
                  
                  # sidebar to hold table of correlation coefficients by team
@@ -157,28 +155,6 @@ ui <- navbarPage(
                             downloading as png, and resetting to the default.")
                      ),
                      
-                     # sidebarPanel(
-                     #     h4(strong("Payroll and Regular Season Wins:
-                     #                Correlation Table"),
-                     #        align = "center"),
-                     #     h4(textOutput("team_cor_text"),
-                     #        align = "center"),
-                     #     h5(textOutput("team_cor_max"),
-                     #        align = "center"),
-                     #     h5(textOutput("team_cor_min"),
-                     #        align = "center"),
-                     #     h5(textOutput("team_cor_avg"),
-                     #        align = "center"),
-                     #     gt_output("team_cor"),
-                     #     br(),
-                     #     p("Most teams tend to earn more wins when they spend 
-                     #       more on payroll. But others see no strong 
-                     #       relationship between payroll and win percentage, and 
-                     #       a few have the dubious distinction of experiencing a 
-                     #       NEGATIVE relationship - meaning they tend to win LESS
-                     #       when they spend more than their competitors.")
-                     # ),
-                     
                      # main panel holds plotly of payroll and wins by team
                      
                      mainPanel(
@@ -190,7 +166,19 @@ ui <- navbarPage(
                             spending in a season compared to others in the
                             league (1 is lowest)")),
                          tabsetPanel(type = "tabs",
-                                     tabPanel("Plot", plotlyOutput("by_team"))
+                                     tabPanel("Plot", plotlyOutput("by_team")),
+                                     tabPanel("Correlation Tables",
+                                              fluidRow(
+                                                  column(6,
+                                                         gt_output("team_cor_1")
+                                                  ),
+                                                  column(6,
+                                                         gt_output("team_cor_2")
+                                                  )
+                                              ),
+                                              class = 'leftAlign'),
+                                     tabPanel("Observations",
+                                              textOutput("obs_by_team"))
                          )
                      )
              )
@@ -199,8 +187,8 @@ ui <- navbarPage(
     
     # model panel, to talk more about model and regression results
     
-    tabPanel("Model",
-             titlePanel("Payroll and Wins: A Linear Model"),
+    tabPanel("Payroll's Effect",
+             titlePanel("Payroll and Performance: A Linear Model"),
              sidebarLayout(
                  
                  # sidebar panel holds selector to pick league to view and a few
@@ -324,6 +312,7 @@ ui <- navbarPage(
                      .noWS = "outside", target = "_blank"),
                ".")
              )
+    
     )
 
 
@@ -445,7 +434,7 @@ server <- function(input, output) {
     
     # render the gt table for the sidebar display
     
-    output$year_cor <- render_gt({
+    output$year_cor_1 <- render_gt({
         
         # choose table to show based on input$league selector
         
@@ -460,6 +449,49 @@ server <- function(input, output) {
         
         year_cor_table
         
+    })
+    
+    # render the gt table for the sidebar display
+    
+    output$year_cor_2 <- render_gt({
+        
+        # choose table to show based on input$league selector
+        
+        year_cor_table <- case_when(
+            input$league_2 == "nba" ~ list(nba_year_cor_sum),
+            input$league_2 == "mlb" ~ list(mlb_year_cor_sum),
+            input$league_2 == "nhl" ~ list(nhl_year_cor_sum),
+            TRUE ~ list(mls_year_cor_sum)) %>%
+            .[[1]]
+        
+        # show table
+        
+        year_cor_table
+        
+    })
+    
+    # reactive subtitle for relationship-by-year plot
+    
+    output$by_year_subtitle <- renderText({
+        
+        subtitle_text <- case_when(input$league_2 == "nba" ~
+                                       "NBA, 1985 - 2018",
+                                   input$league_2 == "mlb" ~
+                                       "MLB, 1985 - 2016",
+                                   input$league_2 == "nhl" ~
+                                       "NHL, 1999 - 2008",
+                                   TRUE ~ "MLS, 2007 - 2019")
+    })
+    
+    output$obs_by_year <- renderText({
+        
+        obs_by_year_text <- case_when(input$league_2 == "nba" ~
+                                          "NBA",
+                                      input$league_2 == "mlb" ~
+                                          "MLB",
+                                      input$league_2 == "nhl" ~
+                                          "NHL",
+                                      TRUE ~ "MLS")
     })
     
     # reactive plotly to show payroll and wins by year, using plots from helper
@@ -483,7 +515,7 @@ server <- function(input, output) {
         
         # change y-axis title position so it doesn't overlap with labels
         
-        gp2[['x']][['layout']][['annotations']][[2]][['x']] <- -0.045
+        gp2[['x']][['layout']][['annotations']][[2]][['x']] <- -0.04
         
         # display plot, customizing mode bar to drop unnecessary buttons
         
@@ -550,7 +582,7 @@ server <- function(input, output) {
     
     # render the cor by team gt table for display in sidebar
     
-    output$team_cor <- render_gt({
+    output$team_cor_1 <- render_gt({
         
         # choose table to show based on input$league selector
         
@@ -564,6 +596,25 @@ server <- function(input, output) {
         # show table
         
         team_cor_table
+        
+    })
+    
+    # render the summary table for cor by team
+    
+    output$team_cor_2 <- render_gt({
+        
+        # choose table to show based on input$league selector
+        
+        team_cor_sum <- case_when(
+            input$league_3 == "nba" ~ list(nba_team_cor_sum),
+            input$league_3 == "mlb" ~ list(mlb_team_cor_sum),
+            input$league_3 == "nhl" ~ list(nhl_team_cor_sum),
+            TRUE ~ list(mls_team_cor_sum)) %>%
+            .[[1]]
+        
+        # show table
+        
+        team_cor_sum
         
     })
     
@@ -587,7 +638,7 @@ server <- function(input, output) {
         
         # change y-axis title position so it doesn't overlap with labels
         
-        gp3[['x']][['layout']][['annotations']][[2]][['x']] <- -0.045
+        gp3[['x']][['layout']][['annotations']][[2]][['x']] <- -0.04
         
         # display plot, customizing mode bar
         
