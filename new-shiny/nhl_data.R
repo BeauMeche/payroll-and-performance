@@ -59,12 +59,39 @@ nhl_plot_3 <- nhl_adjusted %>%
 nhl_year_cor_table <- nhl_adjusted %>% 
   group_by(season) %>% 
   summarize(cor = cor(payroll_adjusted, pts)) %>%
-  mutate(cor = round(cor, digits = 2)) %>% 
+  mutate(cor = round(cor, digits = 3)) %>% 
   gt() %>%
   cols_label(season = md("**Season**"),
              cor = md("**Correlation Coefficient**")) %>%
   cols_align(columns = "season", align = "left") %>% 
-  tab_options(container.height = 350)
+  tab_options(container.height = 535) %>% 
+  tab_header(title = "Payroll and Regular Season Performance",
+             subtitle = "Strength of Relationship by Season")
+
+# neat summary table for by-season correlations
+
+nhl_year_cor_sum <- nhl_adjusted %>% 
+  group_by(season) %>% 
+  summarize(cor = cor(payroll_adjusted, pts)) %>% 
+  mutate(Max = max(cor),
+         Min = min(cor),
+         Mean = mean(cor)) %>% 
+  filter(Max == cor | Min == cor) %>% 
+  pivot_longer(cols = c("Max", "Min", "Mean"), names_to = "type") %>% 
+  filter(value == cor | type == "Mean") %>%
+  mutate(season = ifelse(type == "Mean",
+                         "",
+                         season)) %>% 
+  select(type, value, season) %>% 
+  arrange(desc(value)) %>% 
+  distinct() %>% 
+  mutate(value = round(value, digits = 3)) %>% 
+  gt() %>% 
+  cols_label(type = "",
+             value = md("**Correlation**"),
+             season = md("**Season**")) %>% 
+  cols_align(columns = "value", align = "center") %>% 
+  tab_header(title = "Summary")
 
 # table for cor between payroll and points by team
 
@@ -76,7 +103,43 @@ nhl_team_cor_table <- nhl_adjusted %>%
   cols_label(team = md("**Team**"),
              cor = md("**Correlation Coefficient**")) %>%
   cols_align(columns = "team", align = "left") %>% 
-  tab_options(container.height = 300)
+  tab_options(container.height = 535) %>% 
+  tab_header(title = "Payroll and Regular Season Performance",
+             subtitle = "Strength of Relationship by Team")
+
+# create summary table for by-team correlations
+
+nhl_top_3 <- nhl_adjusted %>% 
+  group_by(team) %>% 
+  summarize(cor = cor(payroll_rank, pts)) %>%
+  top_n(3, cor) %>% 
+  arrange(desc(cor)) %>% 
+  mutate(group = "Top 3")
+
+nhl_team_cor_mean <- nhl_adjusted %>% 
+  group_by(team) %>% 
+  summarize(cor = cor(payroll_rank, pts)) %>%
+  summarize(cor = mean(cor)) %>% 
+  mutate(team = "Overall mean",
+         group = "") %>% 
+  select(team, cor, group)
+
+nhl_bottom_3 <- nhl_adjusted %>% 
+  group_by(team) %>% 
+  summarize(cor = cor(payroll_rank, pts)) %>%
+  top_n(3, desc(cor)) %>% 
+  arrange(desc(cor)) %>% 
+  mutate(group = "Bottom 3")
+
+nhl_team_cor_sum <- bind_rows(nhl_team_cor_mean, nhl_top_3, nhl_bottom_3) %>% 
+  mutate(cor = round(cor, digits = 2)) %>% 
+  gt(groupname_col = "group") %>% 
+  cols_align(columns = "team", align = "left") %>% 
+  tab_style(style = cell_text(weight = "bold"),
+            locations = cells_row_groups(groups = c("Top 3", "Bottom 3"))) %>% 
+  tab_header(title = "Summary") %>% 
+  cols_label(team = md("**Team**"),
+             cor = md("**Correlation Coefficient**"))
 
 
 

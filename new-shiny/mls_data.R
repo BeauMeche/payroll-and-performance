@@ -57,7 +57,34 @@ mls_year_cor_table <- mls_adjusted %>%
   cols_label(year = md("**Year**"),
              cor = md("**Correlation Coefficient**")) %>%
   cols_align(columns = "year", align = "left") %>% 
-  tab_options(container.height = 350)
+  tab_options(container.height = 535) %>% 
+  tab_header(title = "Payroll and Regular Season Performance",
+             subtitle = "Strength of Relationship by Year")
+
+# neat summary table for by-season correlations
+
+mls_year_cor_sum <- mls_adjusted %>% 
+  group_by(year) %>% 
+  summarize(cor = cor(payroll_adjusted, pts)) %>% 
+  mutate(Max = max(cor),
+         Min = min(cor),
+         Mean = mean(cor)) %>% 
+  filter(Max == cor | Min == cor) %>% 
+  pivot_longer(cols = c("Max", "Min", "Mean"), names_to = "type") %>% 
+  filter(value == cor | type == "Mean") %>%
+  mutate(year = ifelse(type == "Mean",
+                         "",
+                         year)) %>% 
+  select(type, value, year) %>% 
+  arrange(desc(value)) %>% 
+  distinct() %>% 
+  mutate(value = round(value, digits = 2)) %>% 
+  gt() %>% 
+  cols_label(type = "",
+             value = md("**Correlation**"),
+             year = md("**Year**")) %>% 
+  cols_align(columns = "value", align = "center") %>% 
+  tab_header(title = "Summary")
 
 # table for cor between payroll and points by team
 
@@ -69,7 +96,49 @@ mls_team_cor_table <- mls_adjusted %>%
   cols_label(club = md("**Club**"),
              cor = md("**Correlation Coefficient**")) %>%
   cols_align(columns = "club", align = "left") %>% 
-  tab_options(container.height = 300)
+  tab_options(container.height = 535) %>% 
+  tab_header(title = "Payroll and Regular Season Performance",
+             subtitle = "Strength of Relationship by Team")
+
+# create summary table for by-team correlations
+
+mls_top_3 <- mls_adjusted %>% 
+  group_by(club) %>% 
+  filter(n() > 4) %>% 
+  summarize(cor = cor(payroll_rank, pts)) %>%
+  top_n(3, cor) %>% 
+  arrange(desc(cor)) %>% 
+  mutate(group = "Top 3")
+
+mls_team_cor_mean <- mls_adjusted %>% 
+  group_by(club) %>% 
+  filter(n() > 4) %>% 
+  summarize(cor = cor(payroll_rank, pts)) %>% 
+  summarize(cor = mean(cor, na.rm = TRUE)) %>% 
+  mutate(club = "Overall mean",
+         group = "") %>% 
+  select(club, cor, group)
+
+mls_bottom_3 <- mls_adjusted %>% 
+  group_by(club) %>% 
+  filter(n() > 4) %>% 
+  summarize(cor = cor(payroll_rank, pts)) %>%
+  top_n(3, desc(cor)) %>% 
+  arrange(desc(cor)) %>% 
+  mutate(group = "Bottom 3")
+
+mls_team_cor_sum <- bind_rows(mls_team_cor_mean, mls_top_3, mls_bottom_3) %>% 
+  mutate(cor = round(cor, digits = 2)) %>% 
+  gt(groupname_col = "group") %>% 
+  cols_align(columns = "club", align = "left") %>% 
+  tab_style(style = cell_text(weight = "bold"),
+            locations = cells_row_groups(groups = c("Top 3", "Bottom 3"))) %>% 
+  tab_header(title = "Summary") %>% 
+  cols_label(club = md("**Team**"),
+             cor = md("**Correlation Coefficient**")) %>% 
+  tab_footnote(footnote = "Considering only teams with at least 5 seasons of 
+               data",
+               locations = cells_title("title")) 
 
 
 
