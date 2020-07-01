@@ -63,8 +63,8 @@ p7_link_3 <- "https://github.com/westleycook/payroll-and-performance/blob/master
 
 p7c <- " for my scraping code."
 
-p8 <- "My name is Westley Cook and I'm a Harvard senior majoring in East Asian 
-Studies with a secondary in Government. You can reach me at 
+p8 <- "My name is Westley Cook and I'm a Harvard '20 grad with a BA in East 
+Asian Studies and a secondary in Government. You can reach me at 
 westleykcook@gmail.com and find me on "
 
 p8_link <- "https://github.com/westleycook"
