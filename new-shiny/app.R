@@ -228,78 +228,17 @@ ui <- navbarPage(
     )
     ),
     
-    # # model panel, to talk more about model and regression results
-    # 
-    # tabPanel("Comments on Payroll's Effect",
-    #          titlePanel("Payroll and Performance: A Linear Model"),
-    #          sidebarLayout(
-    #              
-    #              # sidebar panel holds selector to pick league to view and a few
-    #              # observational notes about the data itself
-    #              
-    #              sidebarPanel(
-    #                  h4(strong("Select a League")),
-    #                  p("Note: the effects documented on this page are not
-    #                    necessarily causal; rather, they represent the average
-    #                    effect on win percentage associated with payroll"),
-    #                  selectInput("league_4",
-    #                              "League",
-    #                              c("NBA" = "nba", "MLB" = "mlb",
-    #                                "NHL" = "nhl", "MLS" = "mls")
-    #                              ),
-    #                  h4(strong("Observations:")),
-    #                  h4("NBA"),
-    #                  p("Roughly half of the teams' confidence intervals are
-    #                    above zero, indicating that they have a definite positive 
-    #                    association between payroll rank and win percentage"),
-    #                  p("The Knicks and Pelicans have not historically been
-    #                    smart spenders; they actually tend to lose more when 
-    #                    spending more"),
-    #                  h4("MLB"),
-    #                  p("The New York Yankees have far and away the largest 
-    #                    effect of payroll rank on win percentage; for all but a 
-    #                    few of the other teams, the effect appears negligible"),
-    #                  p("Generally, teams in the MLB seem to experience a lower
-    #                    effect than teams in the NBA")
-    #              )
-    #          ),
-    #          
-    #          sidebarLayout(
-    #              
-    #              # sidebar panel holds observational notes about the data
-    #              
-    #              sidebarPanel(
-    #                  h4(strong("Observations:")),
-    #                  h4("NBA"),
-    #                  p("Payroll's effect on win percentage declined from 1985
-    #                    until 1997, at which point it leveled off"),
-    #                  p("In every season except 1984-95 and 1988-89, the 95% 
-    #                    confidence interval contains zero - so for all but two of
-    #                    the seasons, we can't be sure an additional $1 million on
-    #                    payroll had any effect at all on win percentage"),
-    #                  h4("MLB"),
-    #                  p("With the exception of 1985, there seems to be no real 
-    #                     effect of payroll on win percentage regardless of season
-    #                     - and even the 1985 effect is small ($1 million 
-    #                     additional payroll is associated, on average, with less 
-    #                    than a .5 point increase in win percentage)")
-    #              )
-    #          )
-    # ),
-    
     # about panel, to explain the project and do some shameless PR. All text is
     # assigned to objects in about_page_text.R
     
     tabPanel("About", 
              titlePanel("About the Project"),
-             p(p1),
+             p(strong(p1)),
              h3("Definitional Notes"),
              p(p2),
              h3("More to Come?"),
              p(p3),
-             # p(p4),
-             p(p5),
-             h3("Acknowledgements"),
+             h3("Sources and Acknowledgements"),
              
              # gets a little messy creating hyperlinks
              
@@ -307,7 +246,7 @@ ui <- navbarPage(
                      .noWS = "outside", target = "_blank"),
                p6a, a(href = p6_link_2, "here",
                       .noWS = "outside", target = "_blank"),
-               p6b, a(href = p6_link_3, "here",
+               p6b, a(href = scraping_code, "here",
                       .noWS = "outside", target = "_blank"),
                p6c),
              
@@ -317,16 +256,38 @@ ui <- navbarPage(
                      .noWS = "outside", target = "_blank"),
                p7a, a(href = p7_link_2, "here",
                       .noWS = "outside", target = "_blank"),
-               p7b, a(href = p7_link_3, "here",
+               p7b, a(href = scraping_code, "here",
                       .noWS = "outside", target = "_blank"),
                p7c),
              
              # and here
              
+             p(p10, a(href = p10_link_1, "Wikipedia page",
+                     .noWS = "outside", target = "_blank"),
+               p10a, a(href = p10_link_2, "this database",
+                      .noWS = "outside", target = "_blank"),
+               p10b, a(href = scraping_code, "here",
+                      .noWS = "outside", target = "_blank"),
+               period),
+             
+             # aaaaaand here
+             
+             p(p11, a(href = p11_link_1, "here",
+                      .noWS = "outside", target = "_blank"),
+               p11a, a(href = p11_link_2, "MLS website",
+                       .noWS = "outside", target = "_blank"),
+               p11b, a(href = p11_link_3, "Wikipedia",
+                       .noWS = "outside", target = "_blank"),
+               p11c, a(href = scraping_code, "here",
+                       .noWS = "outside", target = "_blank"),
+               period),
+             
+             # and here, but at least we're done with acknowledgements now
+             
              h3("About Me"),
              p(p8, a(href = p8_link, "GitHub",
                      .noWS = "outside", target = "_blank"),
-               p8a),
+               period),
              
              # aaaand here
              
