@@ -56,7 +56,7 @@ ui <- navbarPage(
                          tabsetPanel(type = "tabs",
                                      tabPanel("Plot", plotlyOutput("payroll")),
                                      tabPanel("Key Takeaway",
-                                              h4(textOutput("payroll_over_time")
+                                              p(textOutput("payroll_over_time")
                                                  )
                                               )
                          )
@@ -365,20 +365,20 @@ server <- function(input, output) {
         
         payroll_over_time_text <- case_when(
             input$league_1 == "nba" ~
-                "Tremendous growth in payroll over time, with some growth in 
-                inequality (payroll spread) as well; inequality was greatest 
-                between 1997 and 2008",
+                "Payroll has grown tremendously over time, with some growth in 
+                inequality (payroll spread) as well. Inequality was greatest 
+                between 1997 and 2008.",
             input$league_1 == "mlb" ~
-               "Payroll over time has grown substantially; inequality (payroll 
+               "Payroll over time has grown substantially. Inequality (payroll 
                 spread) has also grown, led by the high-spending New York 
-                Yankees",
+                Yankees.",
             input$league_1 == "nhl" ~
-                "Payroll spread condensed dramatically after 2005 lockout as top
-                spenders began spending significantly less",
+                "Payroll spread condensed dramatically after the 2005 lockout as
+                top spenders began spending significantly less.",
             TRUE ~ 
-                "Extremely skewed data, with a few teams (in LA, NYC, and 
-                Toronto) consistently outspending the pack; overall, slow growth
-                in payroll over time")
+                "The data is extremely skewed, with a few teams (in LA, NYC, and 
+                Toronto) consistently outspending the pack. Overall, there has
+                been slow growth in payroll over time.")
         
     })
     
@@ -529,13 +529,45 @@ server <- function(input, output) {
     output$obs_by_year <- renderText({
         
         case_when(input$league_2 == "nba" ~
-                      "NBA",
+                      "League-wide, payroll's effect on performance declined in
+                    magnitude from 1985-2001. From 2001-2008 -- during seasons 
+                    characterized by high-spending teams such as the Knicks and 
+                    Blazers performing poorly despite their high payrolls -- the
+                    estimated effect of payroll on performance hovered near 
+                    zero. However, since then there has been a slight rebound. 
+                    Note that for all seasons except two (1984-85 and 1988-89),
+                    the 95% confidence interval contains zero; this indicates
+                    that except for those two seasons, we can NOT say with
+                    confidence that payroll had ANY effect on performance across
+                    the league.",
                   input$league_2 == "mlb" ~
-                      "MLB",
+                      "For all seasons except 1985, the estimated effect of
+                    payroll on performance is near zero, and zero is well within
+                    the bounds of each 95% confidence interval. This means that 
+                    despite seeing some seasons with moderately strong 
+                    correlations between payroll and performance (e.g. 1998, 
+                    2016), the effect of payroll on performance appears to be 
+                    negligible.",
                   input$league_2 == "nhl" ~
-                      "NHL",
+                      "In most seasons, the effect of payroll on performance 
+                    appears to be small (an extra $1 million spent on payroll is
+                    associated with an additional half point in the regular 
+                    season standings), but the confidence intervals give reason 
+                    to believe that some positive effect is indeed present. The
+                    effect was strongest in the 2005-06 season, which is 
+                    noteworthy because the season prior to that (2004-05) had 
+                    been cancelled due to lockout.",
                   TRUE ~ 
-                      "MLS")
+                      "The linear relationship between payroll and performance 
+                    in the MLS appears to be quite weak in most seasons (and 
+                    is even NEGATIVE in four of them -- meaning that teams who 
+                    spent more on payroll tended to earn FEWER points in the 
+                    regular season standings). This is likely a result of the 
+                    skewedness of the payroll data set: a simple linear model 
+                    is easily influenced by outliers (i.e. the high-spending 
+                    teams in New York, LA, and Toronto) and thus may not be the 
+                    most useful model to describe this league's data.
+                    ")
     })
     
     # reactive subtitle for relationship-by-team plot
@@ -657,13 +689,54 @@ server <- function(input, output) {
     output$obs_by_team <- renderText({
         
         case_when(input$league_3 == "nba" ~
-                      "NBA",
+                      "Roughly half of the NBA's 30 teams experience a definite
+                    positive effect on performance when they outspend their 
+                    competitors (read: the 95% confidence interval for effect
+                    does NOT contain zero) and all but three of the teams see
+                    an estimated positive effect, with values ranging from a .05
+                    to 1.3 point increase in regular season win percentage for 
+                    each additional team they outspend. However, the Blazers, 
+                    Pelicans, and Knicks have the dubious distinction of 
+                    experiencing a NEGATIVE effect -- meaning they tend to 
+                    win FEWER regular season games when they outspend their
+                    opponents. This overall effect seems to be the result of 
+                    their high spending and poor performance in the early 2000s.
+                    ",
                   input$league_3 == "mlb" ~ 
-                      "MLB",
+                      "Only 7 of the league's 30 teams experience a definite
+                    positive effect on performance when they outspend their 
+                    competitors (read: the 95% confidence interval for effect
+                    does NOT contain zero), and the estimated size of the effect
+                    for each team except the New York Yankees tends to be 
+                    smaller than those seen in the NBA. In stark contrast with
+                    the rest of the league, the Yankees -- known for attracting
+                    the league's best talent with big money -- see a very strong
+                    relationship between how much they spend on payroll relative
+                    to the rest of the league and how well they perform.",
                   input$league_3 == "nhl" ~
-                      "NHL",
+                      "Perhaps the most noteworthy thing in the NHL is the wide 
+                      variation among teams: the New York Islanders, Nashville 
+                      Predators, and Atlanta Thrashers all see an estimated 
+                      effect of more than 2 additional points in the regular 
+                      season standings for each team they outspend, while the
+                      estimated effect for the Columbus Blue Jackets is an 
+                      atrocious -1.4 and the estimated effect for the New York 
+                      Rangers is even worse (nearly -3). It's interesting that
+                      in the league where money seems to make the biggest 
+                      difference (see Payroll and Performance by Year), some 
+                      teams seem to be spending much more effectively than 
+                      others.",
                   TRUE ~ 
-                      "MLS")
+                      "Like the NHL, MLS is noteworthy for a wide variation 
+                      among teams in the effectiveness of payroll spending: 
+                      Toronto FC sees an estimated effect of 2.5 additional 
+                      points in the regular season standings for each team they 
+                      outspend, while FC Dallas and New York City FC each see an 
+                      effect of -0.9. Interestingly, among all four leagues, MLS
+                      has the most teams (8) and highest proportion of teams 
+                      (1/3) which experience a negative relationship between 
+                      payroll and performance.")
+        
     })
 
 }
