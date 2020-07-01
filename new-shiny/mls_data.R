@@ -144,9 +144,12 @@ mls_team_cor_sum <- bind_rows(mls_team_cor_mean, mls_top_3, mls_bottom_3) %>%
 
 ###### MODELS
 
-# assign interaction model for payroll_rank and team
+# assign interaction model for payroll_rank and team, filtering only for teams
+# with at least 5 seasons of data
 
-mls_mod_team <- lm(pts ~ payroll_rank * club, mls_adjusted)
+mls_mod_team <- lm(pts ~ payroll_rank * club, mls_adjusted %>% 
+                     group_by(club) %>% 
+                     filter(n() > 4))
 
 # tidy the model and select desired variables
 
@@ -176,7 +179,7 @@ mls_mod_team_effect <- mls_mod_team_tidy %>%
 
 mls_mod_plot_1 <- mls_mod_team_effect %>% 
   mutate(term = ifelse(term == "payroll_rank",
-                       "Atlanta United FC",
+                       "Chicago Fire FC",
                        str_remove(term, "payroll_rank:club")),
          term = fct_reorder(term, desc(effect), .fun = "median")) %>% 
   ggplot(aes(term, effect, text = paste(term, 
@@ -187,10 +190,11 @@ mls_mod_plot_1 <- mls_mod_team_effect %>%
                 color = "dark blue", width = .75) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
   theme_classic() +
-  labs(x = "",
+  labs(x = "Note: only displays teams with at least 5 seasons of data",
        y = "Effect") +
   theme(axis.text.x = element_text(angle = 65, hjust = 1, vjust = 1),
-        axis.title = element_text(face = "bold"))
+        axis.title.y = element_text(face = "bold"),
+        axis.title.x = element_text(face = "italic"))
 
 # assign interaction model for payroll_adjusted and season
 

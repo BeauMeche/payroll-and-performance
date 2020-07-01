@@ -184,14 +184,20 @@ nhl_mod_plot_1 <- nhl_mod_team_effect %>%
                                         as.character(round(effect, digits = 3)),
                                         sep = ": "))) +
   geom_point(color = "dark blue") +
-  geom_errorbar(aes(ymin = lower, ymax = upper),
+  geom_errorbar(aes(ymin = ifelse(lower > -5,
+                                  lower, 
+                                  -5),
+                    ymax = ifelse(upper < 5,
+                                  upper,
+                                  5)),
                 color = "dark blue", width = .75) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
   theme_classic() +
-  labs(x = "",
+  labs(x = "Note: some bars artificially capped at -5 or 5 for clean plot display",
        y = "Effect") +
   theme(axis.text.x = element_text(angle = 65, hjust = 1, vjust = 1),
-        axis.title = element_text(face = "bold"))
+        axis.title.y = element_text(face = "bold"),
+        axis.title.x = element_text(face = "italic"))
 
 # assign interaction model for payroll_adjusted and season
 
