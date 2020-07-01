@@ -1155,7 +1155,7 @@ mls_adjusted <- full_join(mls_performance,
                           by = c("year", "club")) %>% 
   filter(!is.na(pts)) %>% 
   group_by(year) %>% 
-  mutate(payroll_rank = rank(payroll))
+  mutate(payroll_rank = rank(payroll) * 24 / n())
 
 ```
 
@@ -1168,6 +1168,8 @@ save(nhl_adjusted, file = "shiny/data-files/nhl.Rdata")
 save(mls_adjusted, file = "shiny/data-files/mls.Rdata")
 save(nba_adjusted, mlb_adjusted, file = "data-files/mlb&nba.Rdata")
 save(nhl_adjusted, mls_adjusted, file = "data-files/nhl&mls.Rdata")
+
+save(mls_adjusted, file = "new-shiny/data-files/mls.Rdata")
 
 ```
 

@@ -37,7 +37,7 @@ mls_plot_3 <- mls_adjusted %>%
   ggplot(aes(payroll_rank, pts, text = year)) +
   geom_point() +
   facet_wrap(~ club, scales = "free_x") +
-  labs(x = "Payroll Rank",
+  labs(x = "Payroll Rank (adjusted to account for league growth from 13 to 24 teams over 13 seasons)",
        y = "Regular Season Points") +
   theme_classic() +
   theme(axis.title = element_text(face = "bold")) +
@@ -186,15 +186,23 @@ mls_mod_plot_1 <- mls_mod_team_effect %>%
                                         as.character(round(effect, digits = 3)),
                                         sep = ": "))) +
   geom_point(color = "dark blue") +
-  geom_errorbar(aes(ymin = lower, ymax = upper),
+  geom_errorbar(aes(ymin = ifelse(lower > -3,
+                                  lower,
+                                  -2.5),
+                    ymax = ifelse(upper < 5,
+                                  upper,
+                                  4.5)),
                 color = "dark blue", width = .75) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
   theme_classic() +
-  labs(x = "Note: only displays teams with at least 5 seasons of data",
+  labs(x = "Note: only displays teams with at least 5 seasons of data
+LA Galaxy bars artificially capped at -2.5 and 4.5 for clean plot display",
        y = "Effect") +
   theme(axis.text.x = element_text(angle = 65, hjust = 1, vjust = 1),
         axis.title.y = element_text(face = "bold"),
         axis.title.x = element_text(face = "italic"))
+
+mls_mod_plot_1
 
 # assign interaction model for payroll_adjusted and season
 
