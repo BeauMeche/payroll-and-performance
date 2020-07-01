@@ -889,8 +889,8 @@ nhl_adjusted <- full_join(nhl_performance, nhl_payroll,
 
 ```{r mls-data, echo=FALSE}
 
-#creating function to pull and tidy mls payroll data from PDF tables compiled by
-#MLSPA which list every player's salary year-by-year
+# creating function to pull and tidy mls payroll data from PDF tables compiled 
+# by MLSPA which list every player's salary year-by-year
 
 pull_mls_payroll <- function(year, url){
   out <- extract_tables(url)
